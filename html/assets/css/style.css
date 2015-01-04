@@ -1,0 +1,90 @@
+body {
+  font-family: "freight-text-pro", Georgia, Cambria, "Times New Roman", Times, serif;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  color: rgba(0,0,0,0.8);
+}
+
+#side-bar {
+  width: 20%;
+  position: fixed;
+  height: 98%;
+  /*border-right: solid rgb(210,210,210)  1px;*/
+  text-align: right;
+}
+
+#title {
+  margin-top: 150px;
+  font-size: 50px;
+}
+
+#name {
+  font-size: 30px;
+  margin-top: 20px;
+}
+
+#social-media {
+  font-size: 20px;
+}
+
+#social-media, a {
+  color: rgba(0,0,0,0.8);
+  margin-left: 10px;
+}
+
+#side-bar, a {
+  text-decoration: none;
+}
+
+#menu {
+  margin-top: 40px;
+}
+
+#nav-item-date {
+  margin-left: 10px;
+}
+
+#side-bar, li {
+  display: block;
+}
+
+
+
+
+/*Pages*/
+#container {
+  width: 80%;
+  float: right;
+}
+
+#content {
+  margin-left: 110px;
+  width: 60%;
+  float: left;
+}
+
+#bar-left {
+  width: 10%;
+  height: 100%;
+  float: left;
+}
+
+#bar-right {
+  width: 30%;
+  height: 100%;
+  float: right;
+}
+
+#container h1 {
+  font-size: 50px;
+}
+
+#container p {
+  letter-spacing: 0.01rem;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.5;
+  -webkit-margin-after: 1em;
+  -webkit-margin-before: 1em;
+  font-style: normal;
+}
