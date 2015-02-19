@@ -1,0 +1,99 @@
+include ./includes/post-layout
+
+  :markdown
+    #WebRTC Parallel Processing (part 1)
+  
+    I did a little experiment with WebRTC and a CFD (Computational Fluid Dynamics) solver I wrote a while back.
+    I wanted to see what could be done with webRTC in the browser parallel computing theme. 
+
+    CFD is a class of numerical methods to solve differential equation from fluid flow problems. 
+    When you use parallel computing techniques, you end up with a lot of communications
+    between nodes and this quickly becomes the bottleneck in the process.
+
+ 
+    This post deals with the implementations aspects of the solver. In a future post, I'll write about speed and performance.
+
+    ##The Poisson Equation
+
+    The equation I'm solving is in the form of 
+
+  .equation(lang='latex') \left(\frac{\partial ^2}{\partial x^2} + \frac{\partial ^2}{\partial y^2} \right) U(x,y) = b
+
+  :markdown
+    this equation describes the physical behaviour of, for instance, heat transfer and fluid flow. Fluid flow problems 
+    are based in the Navier Stokes equation and solving the poisson equation makes up a large amount of the computing time.
+    Here, *U(x,y)* represents the field described by the equations. *U* it's what we need to know and there's no analitical solution. However
+    if we want to test the solver, we usefull to replace *U* by a known function. Considering a rectangular domain of witdth *w* and height *h*, 
+    we have for instance:
+
+  .equation(lang='latex') U(x,y) = cos \left( \pi \left( \frac{1}{2} - \frac{x}{w} \right) \right) sin \left( \pi \frac{y}{h} \right) 
+
+  :markdown
+    so that replacing the first equation with this *U* function we get:
+
+  .equation(lang='latex')
+    | \left(\frac{\partial ^2}{\partial x^2} + \frac{\partial ^2}{\partial y^2} \right) U(x,y) = 
+    | U(x,y) \left( -\frac{\pi^2}{h^2} - \frac{\pi^2}{w^2}  \right).
+
+  :markdown
+    The field *U* ploted in *x*, *y* looks something like this:
+
+    ![Analytical Field](assets/img/webrtc/analitical.png "Analytical Field")
+
+
+  :markdown
+    ##Numerical Model
+
+    By discretizing the poisson equation, we end up with a way to compute the field *U*. I'll use a first order central finite difference 
+    scheme. I won't bother with the details of the deduction, as you can see it available in[many sources](http://www.ece.utah.edu/~ece6340/LECTURES/Feb1/Nagel%202012%20-%20Solving%20the%20Generalized%20Poisson%20Equation%20using%20FDM.pdf).
+  
+  .equation(lang='latex')
+    | u_{i,j} = - \frac{1}{-2/\Delta x^2 -2/ \Delta y^2} \left( \frac{u_{i,j-1} + u_{i,j+1}}{\Delta x^2} + \frac{u_{i+1,j} + u_{i-1,j} } {\Delta y^2} - U(x_j,y_i) \left( -\frac{\pi^2}{h^2} - \frac{\pi^2}{w^2}  \right) \right).
+
+  :markdown
+    ##Javascript Implementation
+
+    You can find the implementation of the solver on a[github repository](//github.com/fjsousa/poisson-solver). Here's how to run a simple demo.
+
+    ```Javascript
+      var Poisson = require('.');
+
+      //Set conditions
+      var conditions = {
+        w: 1,     //width or x dimension
+        h: 1,     //height or y dimension
+        n: 50,    //number of points in the y dimension
+        m: 50     //number of points in the x dimension
+      };
+
+      //Initialize solver
+      var poisson = new Poisson(conditions);
+
+      var N = [];
+      var S = [];
+      var E = [];
+      var W = [];
+
+      for (var i = 0; i < conditions.n; i++) {
+        N[i] = S[i] = E[i] = W[i] = 0;
+      }
+
+      //Set Dirichlet boundary conditions to zero
+      poisson.setBoundaryConditions(N, S, E, W);
+
+      //Maximum number of iterations allowed
+      var maxItterations = 100000000;
+
+      //Maximum residue allowed
+      var maxResidue = 1E-9 ;
+
+      //Run solver 
+      var output = poisson.solver( maxItterations, maxResidue);
+
+      console.log('Solver converged with', output.iterations, 'iterations and', output.residue, 'residue.');
+
+      //Print solution
+      poisson.print('./field.txt', poisson.u.old);
+    ```
+
+  

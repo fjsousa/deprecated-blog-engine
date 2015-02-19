@@ -20,25 +20,25 @@ module.exports = function(grunt) {
             expand: true,
             cwd: 'src',
             src: '*.jade',
-            dest: 'html',
-            ext: '.html'
-          }
-        ]
-      }
-    },
-    markdown: {
-      all: {
-        files: [
-          {
-            expand: true,
-            cwd: 'src',
-            src: '*.md',
-            dest: 'html',
+            dest: './',
             ext: '.html'
           }
         ]
       }
     }
+    // ,markdown: {
+    //   all: {
+    //     files: [
+    //       {
+    //         expand: true,
+    //         cwd: 'src',
+    //         src: '*.md',
+    //         dest: 'html',
+    //         ext: '.html'
+    //       }
+    //     ]
+    //   }
+    // }
   });
 
   grunt.loadNpmTasks('grunt-contrib-watch');

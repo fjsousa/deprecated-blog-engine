@@ -1,10 +1,12 @@
+/*global*/
 body {
-  font-family: "freight-text-pro", Georgia, Cambria, "Times New Roman", Times, serif;
   margin-top: 8px;
   margin-bottom: 8px;
+  font-family: "freight-text-pro", Georgia, Cambria, "Times New Roman", Times, serif;
   color: rgba(0,0,0,0.8);
 }
 
+/*Side Bar*/
 #side-bar {
   width: 20%;
   position: fixed;
@@ -50,7 +52,6 @@ body {
 
 
 
-
 /*Pages*/
 #container {
   width: 80%;
@@ -88,3 +89,24 @@ body {
   -webkit-margin-before: 1em;
   font-style: normal;
 }
+
+#container img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#container a {
+  color: #006699;
+}
+
+.hljs {
+  font-size: 18px;
+}
+
+.equation {
+}
+
+
+
+
