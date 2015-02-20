@@ -134,12 +134,13 @@ the closer the solution is to a final solution.</p>
   Solver: iteration # 6600 with residue of 1.0195698719555473e-9
   Solver converged with 6610 iterations and 9.988143389726145e-10 residue.
 </code></pre>
-<p>We can visualize the solution using the print method:</p>
+<p>We can visualize the solution using the print method. This writes a <em>n x m</em> table wich you can load in a plotting software. 
+I would recommend<a href="http://home.gna.org/veusz/">veusz</a>.</p>
 <pre><code class="lang-Javascript">  //Print solution
   poisson.print(&#39;./field.txt&#39;, poisson.u.old);
 </code></pre>
 <p><img src="assets/img/webrtc/numerical.png" alt="Numerical Field" title="Numerical"></p>
-<p>In the next post, I&#39;ll show you how I developed from this single program poisson solver and distributed it among several browsers tabs.</p>
+<p>And that&#39;s it. In the next post, I&#39;ll show you how I developed from this single program poisson solver and distributed it among several browsers tabs.</p>
 
       <div id="disqus_thread">    
         <script type="text/javascript">
