@@ -9,7 +9,8 @@ body {
 /*Side Bar*/
 #side-bar {
   width: 20%;
-  position: fixed;
+  /*position: fixed;*/
+  float: left;  
   height: 98%;
   text-align: right;
 }

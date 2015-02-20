@@ -13,7 +13,7 @@ include ./includes/post-layout
 
     The methods used in this type of numerical analysis are iterative, meaning that you'll have to compute several solutions, each one 
     function of and closer to the final solution than the previous. When you use parallel computing techniques, you end up with a 
-    lot of communications between nodes at each iteration. This way, the communication speed quickly becomes the bottleneck in the process.  
+    lot of communication between nodes at each iteration. This way, the communication speed quickly becomes the bottleneck in the process.  
  
     In this first post, I'll write about the solver itself.  In a second posts, I'll write about how I used WebRtC to distribute 
     the computation across several browsers. In a third post, I'll write about performance considerations.
@@ -26,13 +26,15 @@ include ./includes/post-layout
 
   :markdown
     this equation describes aspects of physical behaviour in, for instance, heat transfer and fluid flow. Fluid flow problems 
-    are based in the Navier Stokes equation and solving the poisson equation makes up a large amount of the computing time.
+    are based in the Navier Stokes equation. Solving the poisson term is an important step of a Navier Stokes solver as it
+     makes up a large amount of the computing time.
     
     In the equation above, the term *U(x,y)* represents the field we are interested in computing. Usually there's no 
     analytical solution to get *U*, hence the need to use numerical methods. However
-    if we want to test the solver, we can replace *U* by a known function. 
+    if we want to test the solver, we can go the other way around. 
+    We Start with a given *U* function,  and replace it in the equation above.
 
-    Considering a rectangular domain of witdth *w* and height *h*, 
+    Considering a rectangular domain of width *w* and height *h*, 
     we have for instance:
 
   .equation(lang='latex') U(x,y) = cos \left( \pi \left( \frac{1}{2} - \frac{x}{w} \right) \right) sin \left( \pi \frac{y}{h} \right) 
@@ -50,48 +52,55 @@ include ./includes/post-layout
     | U(x,y) \left( -\frac{\pi^2}{h^2} - \frac{\pi^2}{w^2}  \right).
 
   :markdown
-    Now we have a poisson equation with a known analytical solution.
+    It's important to notice that our *U* function doesn't have any practical physical meaning. 
+    It's just a way to test a solver of a differential equation, of which we have an analytical solution.
 
 
   :markdown
     ##Numerical Model
 
-    The next step is to discretize the equation with a first order central finite difference scheme
+    The next step is to discretize the equation
     and obtain an algebraic formula for *U* that we can code. 
-    I won't enter in details about the deduction because this is an extensive topic but you can 
-    find many[references](http://www.ece.utah.edu/~ece6340/LECTURES/Feb1/Nagel%202012%20-%20Solving%20the%20Generalized%20Poisson%20Equation%20using%20FDM.pdf) in the internet 
+    I won't go into details about the deduction because this is an extensive topic but you can 
+    find many references all over the internet,[like this one](http://www.ece.utah.edu/~ece6340/LECTURES/Feb1/Nagel%202012%20-%20Solving%20the%20Generalized%20Poisson%20Equation%20using%20FDM.pdf).
     
     Basically, the idea is to approximate the derivative in an array of points in the domain of the solution. The points are equally spread 
     in *x* and *y* like in the image bellow
 
     ![points](assets/img/webrtc/domain.png "Points")
 
-    In the image, *h* is the distance between this points. In the x and y direction, this distance will be called *Δx* and *Δy*, respectively.
+    In the image, *h* is the distance between two points. In the x and y direction, this distance will be called *Δx* and *Δy*, respectively.
+    Here's the numerical formula for our equation: 
   
   .equation(lang='latex')
-    | u'_{i,j} = - \frac{1}{-2/\Delta x^2 -2/ \Delta y^2} \left( \frac{u_{i,j-1} + u_{i,j+1}}{\Delta x^2} + \frac{u_{i+1,j} + u_{i-1,j} } {\Delta y^2} - U(x_j,y_i) \left( -\frac{\pi^2}{h^2} - \frac{\pi^2}{w^2}  \right) \right).
+    | u_{i,j} = - \frac{1}{-2/\Delta x^2 -2/ \Delta y^2} \left( \frac{u_{i,j-1} + u_{i,j+1}}{\Delta x^2} + \frac{u_{i+1,j} + u_{i-1,j} } {\Delta y^2} - U(x_j,y_i) \left( -\frac{\pi^2}{h^2} - \frac{\pi^2}{w^2}  \right) \right).
 
 
   :markdown
-    We start with all points set to zero and compute the *u* for every point. We then repeat the process, but ussing the new values. 
-    We repreat the process until there is no significant difference between the new values and the old ones.
+    To compute the field *u* we follow this procedure: we start with all points set to *u = 0* and compute *u'* for every point. 
+    We then repeat the process, computing the new values of *u'*, but now using the old values we computed earlier. 
+    The process is repeated until there is no significant difference between the new values and the old ones.
 
   :markdown
     ##Javascript Implementation
 
-    I implemented the solver in node which enabled me to test everithing first in my local machine. In CFD it's important to test 
-    if the numerical method is being solved correctly, otherwise know as verification, and if the solution compares well with the 
-    equations, also know as validations. I achieved this with a small test suit that checks priceisely this two steps.
+    I implemented the solver in node first so that I could have a version to test in my local machine. 
+    In CFD testing is an important step and there's two steps to accept a numerical solution as valid.
+    First you have to check if the numerical method is being solved correctly. This step is known as verification. 
+    Secondly, you have to check if the solution compares well with the 
+    equations. This is known as validation. This two steps are implemented in a small test suit. You can find the solver 
+    on a[github repository](//github.com/fjsousa/poisson-solver).
 
-    It's better now to jump to the implementations and I show you how to use it. You can find the implementation of the solver 
-    on a[github repository](//github.com/fjsousa/poisson-solver). To install it just run 
+    Here's a walkthrough of the solver: 
+
+    To install it just run 
 
 
     ```
       npm install fjsousa/poisson-solver
     ```
     
-    Here's how to require and instantiate the solver:
+    Then, require and instantiate the solver:
 
     ```Javascript
       var Poisson = require('poisson-solver');
@@ -109,11 +118,11 @@ include ./includes/post-layout
 
     ```
 
-    Here, `w` and `h`are the width and height of the domain. In this case, we are choosing an unitary measuremnet. And `n` and `m` are
-    the number of cells in the 2 dimentions. I was a but lazy here and only tested for situations when n = m. 
+    Here, `w` and `h` are the width and height of the domain. In this case, we are choosing an unitary value for both. `n` and `m` are
+    the number of cells in the dimensions *x* and *y*.  
 
-    Now we need to set boundary condtions. Acoording to our analitical solution, the edges of the domain are zero, so we'll create 
-    4 arrays with zero elements, for the north, south, east and west boundaries:
+    Now we need to set the boundary conditions. According to our analytical solution, the value of the edges of the domain are zero, 
+    so we'll create 4 arrays with zero elements, for the north, south, east and west boundaries:
 
     ```Javascript
       var N = [];
@@ -131,7 +140,8 @@ include ./includes/post-layout
     ```
 
     Now we are ready to start the solver. We call the method poisson.solver and just have to define the maximum number of iterations and the final 
-    residue. 
+    residue. The residue is a measurement of the difference between two consecutive *u* fields. The smaller the residue, 
+    the closer the solution is to a final solution.
 
     ```Javascript
       var maxItterations = 100000000;
@@ -143,7 +153,18 @@ include ./includes/post-layout
 
     ##Visualization
 
-    Now we have the numarical solution and we can visualize it using the print method, 
+    The solver converges with 6100 iterations a residue of 9.988143389726145e-10.
+
+    ```bash
+      Solver: iteration # 6200 with residue of 2.321164929065117e-9
+      Solver: iteration # 6300 with residue of 1.8896603438688794e-9
+      Solver: iteration # 6400 with residue of 1.5383724641902796e-9
+      Solver: iteration # 6500 with residue of 1.252389003936899e-9
+      Solver: iteration # 6600 with residue of 1.0195698719555473e-9
+      Solver converged with 6610 iterations and 9.988143389726145e-10 residue.
+    ```
+
+    We can visualize the solution using the print method:
 
     ```Javascript
       //Print solution
@@ -152,7 +173,7 @@ include ./includes/post-layout
 
     ![Numerical Field](assets/img/webrtc/numerical.png "Numerical")
 
-    In the next post, I'll show you how I developed from here and distributed this solver among several browsers tabs.
+    In the next post, I'll show you how I developed from this single program poisson solver and distributed it among several browsers tabs.
 
 
 
