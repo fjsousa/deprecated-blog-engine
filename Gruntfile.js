@@ -4,7 +4,7 @@ module.exports = function(grunt) {
     watch: {
       html: {
         files: ['src/*.*', 'src/includes/*.*'],
-        tasks: ['jade', 'markdown'],
+        tasks: ['jade'],
         options: {
           interrupt: true
         }
@@ -26,23 +26,8 @@ module.exports = function(grunt) {
         ]
       }
     }
-    // ,markdown: {
-    //   all: {
-    //     files: [
-    //       {
-    //         expand: true,
-    //         cwd: 'src',
-    //         src: '*.md',
-    //         dest: 'html',
-    //         ext: '.html'
-    //       }
-    //     ]
-    //   }
-    // }
   });
 
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jade');
-  grunt.loadNpmTasks('grunt-markdown');
-
-}
+};
