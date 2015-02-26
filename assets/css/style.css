@@ -13,6 +13,7 @@ body {
   float: left;  
   height: 98%;
   text-align: right;
+  font-size: 17px;
 }
 
 #title {
@@ -59,6 +60,23 @@ body {
 #about, p {
   margin-top: 0;
   margin-bottom: 0;
+}
+
+/*subscribe form*/
+#mc_embed_signup {
+  margin-top: 150px;  
+}
+
+#mc_embed_signup form{
+  font-size: 17px !important;
+  text-align: right !important;
+}
+
+#mc_embed_signup input.button, input.email {
+  border-radius: 0px;
+  display: inline !important;
+  margin: 0 0% 10px 0 !important;
+  font-family: "freight-text-pro", Georgia, Cambria, "Times New Roman", Times, serif;  
 }
 
 /*Pages*/
