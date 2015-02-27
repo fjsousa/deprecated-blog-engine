@@ -91,18 +91,6 @@ body {
   float: left;
 }
 
-#bar-left {
-  width: 10%;
-  height: 100%;
-  float: left;
-}
-
-#bar-right {
-  width: 30%;
-  height: 100%;
-  float: right;
-}
-
 #container h1 {
   font-size: 50px;
 }
@@ -134,7 +122,56 @@ body {
 .equation {
 }
 
-@media (max-width: 100px) {
+@media (max-width: 800px) {
+
+  /*Header - navigator*/
+  #side-bar {
+    position: relative;
+    float: none;
+    margin-left: 5%;
+    width: 90%;
+    height: 45%;
+  }
+
+  #header {    
+    text-align: left;
+    float: left;
+    width: 55%; 
+  }
+
+  #social-media {
+    margin-left: 3px;
+  }
+
+  #social-media a{
+    margin-left: 0px;
+    margin-right: 10px;
+  }
+
+  #title {
+    font-size: 80px;  
+    margin-top: 0px;
+  }
+
+  #about {
+    display: none;
+  }
+
+  #mc_embed_signup {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+  }
+
+  /*pages*/
+  #content {
+    margin-left: 5%;
+    width: 90%
+  }
+
+  #container {
+    width: 100%;
+  }
   
 }
 
