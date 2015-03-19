@@ -44,7 +44,9 @@ body {
 }
 
 #nav-item-date {
+  font-size: 14px;
   margin-left: 10px;
+  /*color: rgba(150,150,150,0.8)!important;*/
 }
 
 #side-bar, li {
@@ -171,6 +173,10 @@ body {
 
   #container {
     width: 100%;
+  }
+
+  #menu {
+    display: none;
   }
   
 }
