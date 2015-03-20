@@ -9,9 +9,9 @@ include ./includes/post-layout
 
     ##WebRTC
 
-    WebRTC is a browser specification to enable peer-to-peer communication in the browser. It enables, data, chat and video communication among browsers, without data passing through a server. There is however, the need to have a signalling server that lets the peers know about each others. 
+    WebRTC is a browser specification to enable peer-to-peer communication in the browser. It enables, data, chat and video communication among browsers, without data passing through a server. There is however, the need to have a signalling server that lets the peers know about each other. 
 
-    For production applications, you'll need an additional server that relays messages when both peers can't "see each others", ie, both are behind a firewall. However, we'll simplify this step by running the experiment inside a local network.
+    For production applications, you'll need an additional server that relays messages when both peers can't "see each other", ie, both are behind a firewall. However, we'll simplify this step by running the experiment inside a local network.
 
     To abstract the browser implementation of WebRTC, I'm using[peer.js](http://peerjs.com/).
 
@@ -59,9 +59,9 @@ include ./includes/post-layout
     You should see the words 'Hello from another peer' appear on the first tab.
 
     ##Signalling server
-    This covers the basics for peer.js. With peer.js, browsers can communicate between each other but there's no api to exchange messages between server and peers. So how does a peer know which peers are connected to the server? One way is to setup a REST end point and return a json object with the peer list. 
+     With peer.js, browsers can communicate between each other but there's no api to exchange messages between server and peers. So how does a peer know which peers are connected to the server? One way is to setup a REST end point and return a json object with the peer list. 
 
-    Additionally I want to create the notion of peer groups as a way to allow peers to pass messages only between members in the same group. The concept needs to be implemented if we want to run several experiment with the same signalling server.
+    Additionally I want to create the notion of peer groups as a way to allow peers to pass messages only between members in the same group. The concept needs to be implemented if we want to run several experiments with the same signalling server.
 
     The idea is to use the URL path as a prefix of the peer id. That way, it's easy to query the server for ids that start with a certain prefix. For instance, to connect the client to a group named "someexperiment" we'll do: 
 
@@ -237,25 +237,49 @@ include ./includes/post-layout
     <!-- **** allow discovery****??? -->
 
 
-    ##Domain Paralelization
+    ##Implementing...
 
     Now that we have our master/server approach defined, we'll apply it to the CFD problem at hand. 
 
-    Domain paralellization is achieved by splitting the geometry of the problem among independent processors, in this case, browsers. Each tab is responsible for running one instance of the poisson solver. The solver is converged until the stop conditions are met, which can be the number of iterations or the residue of the iteration being higher than a maximum residue. Then, the boundaries are emitted to the neighbour tabs. For instance, The tab with section 1 will emit the east boundary to section 3, and the south boundary to section 2. The process keeps going until the global convergence is met.
+     The way we parallelize the problem  is called Domain Paralellization. In broad strokes, this is achieved by splitting the geometry of the problem among independent processors, in this case, browser tabs. Each tab is responsible for running one instance of the poisson solver. The solver is converged until the stop criteria are met, which can be the number of iterations or the residue of the iteration being lower than a maximum value. Then, the boundaries are emitted to the neighbour tabs. For instance, the tab with section 1 will emit the east boundary to section 3, and the south boundary to section 2. The process keeps going until the global convergence is met. In our case, this happens when the global residue drops bellow a maximum allowed value.
 
     ![Domain Split](assets/img/webrtc/domain-split.png "Domain Split") 
 
-    
+    I've put a [repository](https://github.com/fjsousa/poisson-rtc) on github with the code I used in this experiment. The main structure is 
 
+    ```bash
+      \ 
+        index.js
+        client\
+          block.js
+          client.js
+          index.html
+          master.js
+          poisson.js
+          worker.js
 
+    ``` 
+    `index.js` is our signalling server. Its main function is to allow peers to connect and know about each other. The entire problem is solved in the browser and nothing goes through the server. 
+
+    The client folder is the code which will run on the browsers. The client code is organized as follows:
+
+    `master.js` has the `Master` class with methods to launch the worker peers and judge convergence.
+
+    `block.js` has the `Block` class with methods to start the poisson solver and emit the boundaries to the neighbour peers. The solver has to run inside a[webworker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/basic_usage) otherwise it would block the web page and crash the browser. This is the `worker.js` file. 
+
+    `poisson.js` is the solver covered in the [previous post](/webrtc-part1.html).
 
     ##Experiment
 
-    I've put a [repository](https://github.com/fjsousa/poisson-rtc) on github with the code I used in this experiment. You can clone it with 
+    This section shows how you can run the experiment in your local network.
+
+    Clone the repository with: 
 
     ```
     git clone https://github.com/fjsousa/poisson-rtc.git
     ```
+
+
 
     Then install:
     
@@ -273,27 +297,28 @@ include ./includes/post-layout
 
     `http://localhost:8080/experiment123`
 
-    Open the console in one of the tabs and past the code:
+    Open the console in one of the tabs and paste the code:
 
     ```Javascript
-    var opts = {
-      peerList: peers,    //your peers
-      blockRows: 2,       //number of block rows 
-      blockCols: 2,       //number of block cols
-      n: 50,              //number of rows of each block 
-      m: 50,              //number of cols of each block
-      blockMaxRes: 1E-9,  //inner solver stopping criteria 
-      blockMaxItt: 60     //inner solver stopping criteria 
-    };
-
     new AllPeers().update(function(peers){
+
+      var opts = {
+        peerList: peers,    //your peers
+        blockRows: 2,       //number of block rows 
+        blockCols: 2,       //number of block cols
+        n: 50,              //number of rows of each block 
+        m: 50,              //number of cols of each block
+        blockMaxRes: 1E-9,  //inner solver stopping criteria 
+        blockMaxItt: 60     //inner solver stopping criteria 
+      };
+
       masterBlock = new MasterBlock(opts);
     })
     ```
 
     When the process finishes, you'll get a download link for each block. In this case, 4.
 
-    This is what the iterative process looks like:
+    And this is what the iterative process looks like in the first few iterations:
 
     ![gif time](assets/img/webrtc/gif.gif "gif time") 
 
