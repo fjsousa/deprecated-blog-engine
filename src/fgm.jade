@@ -1,0 +1,37 @@
+include ./includes/post-layout
+
+  :markdown
+    #Fighting Forest Fires with Cellular Automata
+
+    This is an algorithm I've developed for my Master's thesis...
+
+    There was a propagation model in C, and I used CUDA to speed the shit out of it...
+
+    Show 1st algorithm
+
+  canvas#fgm-serial(width='300', height='150')
+      | Consider updating your browser.
+
+  :markdown
+    Show 2nd algoritm
+
+    boom
+
+  
+script.
+  $(document).ready(function () {
+    draw();
+  })
+
+  var map = [ 
+    [1 , 2, 3, 4, 5 ], 
+    [1 , 2, 3, 4, 5 ],
+    [1 , 2, 3, 4, 5 ],
+    [1 , 2, 3, 4, 5 ],
+    [1 , 2, 3, 4, 5 ]
+    ];
+
+  function draw() {
+    var rags = new MapRags(map); rags.render('fgm-serial')
+  }
+
