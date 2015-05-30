@@ -27,8 +27,8 @@ var MapRags = function (el, map, n, m, scale){
   this.c1 = [255, 255, 255];
   this.c2 = [0, 0, 255];//blue
   this.c3 = [0, 255, 0];//green
-  
-  this.c4 = [255, 0, 0];//red
+  this.c4 = [255, 255, 0];//yellow
+  this.c5 = [255, 0, 0];//red
 
   if (scale && scale.max !== undefined && scale.min !== undefined){ 
     this.max = scale.max;
@@ -103,22 +103,27 @@ MapRags.prototype.mapColor = function(value) {
   var colorMax;
   var colorMin;
 
-  if (value < this.max/3){
+  if (value < this.max/4){
     valueMin = 0;
-    valueMax = this.max/3;
+    valueMax = this.max/4;
     colorMax = this.c2;
     colorMin = this.c1;
 
-  } else if (value < this.max*2/3){
-    valueMin = this.max/3;
-    valueMax = this.max*2/3;
+  } else if (value < this.max*2/4){
+    valueMin = this.max/4;
+    valueMax = this.max*2/4;
     colorMax = this.c3;
     colorMin = this.c2;
-  } else {
-    valueMin = this.max*2/3;
-    valueMax = this.max;
+  } else if (value < this.max*3/4){
+    valueMin = this.max*2/4;
+    valueMax = this.max*3/4;
     colorMax = this.c4;
     colorMin = this.c3;
+  } else {
+    valueMin = this.max*3/4;
+    valueMax = this.max;
+    colorMax = this.c5;
+    colorMin = this.c4;
   }
 
   var mr = (colorMax[0] - colorMin[0])/(valueMax - valueMin);
