@@ -152,7 +152,8 @@ function calcDist(ncol, nrow){
 var mp;
 (function () {
   var ignmap = initmap(cols, rows, 5);
-  mp = ignmap
+  mp = ignmap;
+  var monitor;
 
   var rags = new MapRags('fgm-parallel', ignmap, rows, cols, {max: 20, min: 0}); 
 
@@ -161,6 +162,7 @@ var mp;
   });
 
   function nextIttParallel(){
+    console.log('itt');
 
     for ( row = 0; row < rows; row++){
       for ( col = 0; col < cols; col++){
@@ -206,6 +208,11 @@ var mp;
         rags.updateMap(ignmap);
         rags.render();      
       }
+
+      if (monitor === ignmap[0])
+        return;
+
+      monitor = ignmap[0];
       
       call();
       
