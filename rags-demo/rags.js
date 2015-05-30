@@ -25,7 +25,10 @@ var MapRags = function (el, map, n, m, scale){
   }
 
   this.c1 = [255, 255, 255];
-  this.c2 = [255, 42, 0];
+  this.c2 = [0, 0, 255];//blue
+  this.c3 = [0, 255, 0];//green
+  
+  this.c4 = [255, 0, 0];//red
 
   if (scale && scale.max !== undefined && scale.min !== undefined){ 
     this.max = scale.max;
@@ -70,17 +73,12 @@ MapRags.prototype.render = function () {
         if (this.map[i*this.m + j] === Infinity){
           ctx.fillStyle = "rgb(0,0,0)";
         } else {
-          var mr = (this.c2[0] - this.c1[0])/(this.max - this.min);
-          var mg = (this.c2[1] - this.c1[1])/(this.max - this.min);
-          var mb = (this.c2[2] - this.c1[2])/(this.max - this.min);
 
-          var br = this.c1[0] - mr * this.min; 
-          var bg = this.c1[1] - mg * this.min;
-          var bb = this.c1[2] - mb * this.min;
+          var color = this.mapColor(this.map[i*this.m + j]);
 
-          var r = Math.round( mr * this.map[i*this.m + j] + br);
-          var g = Math.round( mg * this.map[i*this.m + j] + bg);
-          var b = Math.round( mb * this.map[i*this.m + j] + bb);
+          var r = color[0];
+          var g = color[1];
+          var b = color[2];
 
           ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
         }
@@ -96,6 +94,46 @@ MapRags.prototype.render = function () {
       }
     }
   }
+};
+
+MapRags.prototype.mapColor = function(value) {
+
+  var valueMax;
+  var valueMin;
+  var colorMax;
+  var colorMin;
+
+  if (value < this.max/3){
+    valueMin = 0;
+    valueMax = this.max/3;
+    colorMax = this.c2;
+    colorMin = this.c1;
+
+  } else if (value < this.max*2/3){
+    valueMin = this.max/3;
+    valueMax = this.max*2/3;
+    colorMax = this.c3;
+    colorMin = this.c2;
+  } else {
+    valueMin = this.max*2/3;
+    valueMax = this.max;
+    colorMax = this.c4;
+    colorMin = this.c3;
+  }
+
+  var mr = (colorMax[0] - colorMin[0])/(valueMax - valueMin);
+  var mg = (colorMax[1] - colorMin[1])/(valueMax - valueMin);
+  var mb = (colorMax[2] - colorMin[2])/(valueMax - valueMin);
+
+  var br = colorMin[0] - mr * valueMin; 
+  var bg = colorMin[1] - mg * valueMin;
+  var bb = colorMin[2] - mb * valueMin;
+
+  var r = Math.round( mr * value + br);
+  var g = Math.round( mg * value + bg);
+  var b = Math.round( mb * value + bb);
+
+  return [r, g, b];
 };  
 
 MapRags.prototype.updateMap = function (map) {

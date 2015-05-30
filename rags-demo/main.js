@@ -2,7 +2,7 @@ var rags;
 
 $(document).ready(function () {
 
-  rags = new MapRags('fgm-serial', ignmap, rows, cols, {max: 50, min: 0}); 
+  rags = new MapRags('fgm-serial', ignmap, rows, cols, {max: 40, min: 0}); 
   rags.render();
 })
 //            //N   NE   E  SE  S  SW   W  NW   a   b   c   d   e  f   g  h 
