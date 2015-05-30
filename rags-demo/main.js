@@ -2,8 +2,8 @@
 var ncols = [ 0,   1,  1,  1, 0, -1, -1, -1]//, -1,  1, -2,  2, -2, 2, -1, 1];
 var nrows = [ -1, -1,  0,  1, 1,  1,  0, -1]//, -2, -2, -1, -1,  1, 1,  2, 2];
 
-var cols = 50;
-var rows = 50;
+var cols = 20;
+var rows = 20;
 
 //populate with zeros
 var rosmap = rosmap(cols, rows);
@@ -65,7 +65,7 @@ function calcDist(ncol, nrow){
   var tn = t = 0;
 
   $(document).ready(function () {
-    rags = new MapRags('fgm-serial', ignmap, rows, cols, {max: 50, min: 0}); 
+    rags = new MapRags('fgm-serial', ignmap, rows, cols, {max: 20, min: 0}); 
     rags.render();
   });
 
@@ -131,7 +131,7 @@ function calcDist(ncol, nrow){
     setTimeout(function () {
 
       nextIttSerial();
-      if (itt++ % 10 === 0){
+      if (itt++ % 1 === 0){
 
         rags.updateMap(ignmap);
         rags.render();      
@@ -142,7 +142,7 @@ function calcDist(ncol, nrow){
       
       call();
       
-    }, 10);  
+    }, 100);  
   })();
 })();
 
@@ -151,10 +151,10 @@ function calcDist(ncol, nrow){
 ////////////////////
 var mp;
 (function () {
-  var ignmap = initmap(cols, rows, 10);
+  var ignmap = initmap(cols, rows, 5);
   mp = ignmap
 
-  var rags = new MapRags('fgm-parallel', ignmap, rows, cols, {max: 50, min: 0}); 
+  var rags = new MapRags('fgm-parallel', ignmap, rows, cols, {max: 20, min: 0}); 
 
   $(document).ready(function () {
     rags.render();
