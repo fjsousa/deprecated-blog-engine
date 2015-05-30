@@ -10,7 +10,19 @@ var MapRags = function (el, map, n, m, scale){
     return;
   }
 
-  this.el = el;
+  var canvas = document.getElementById(el);
+  if (canvas.getContext) {
+    this.ctx = canvas.getContext('2d');
+
+    this.w = canvas.width;
+    this.h = canvas.height;
+
+    if (this.h/n < 1 || this.w/m < 1)
+      throw 'Cell size < 1. Increase Canvas size'
+  
+  } else {
+    throw 'Couldn\'t get canvas context';
+  }
 
   //flatten 2d array
   if (!!map[0].length) {
@@ -21,7 +33,7 @@ var MapRags = function (el, map, n, m, scale){
   } else {
     this.n = n;
     this.m = m; 
-    this.map =  map;
+    this.map = map;
   }
 
   this.c1 = [255, 255, 255];
@@ -38,60 +50,48 @@ var MapRags = function (el, map, n, m, scale){
 
   //If scale is undefined, get max and min from map
   this.max = Math.max.apply(null, this.map);
-  this.min = Math.min.apply(null, this.map);
-  
+  this.min = Math.min.apply(null, this.map);  
 };
 
 MapRags.prototype.update2D = function (map) {
   var map1d = [];
-  this.map =  map1d.concat.apply([], map);
+  this.map =  map1d.concat.apply([], map);//TODO throws errors with big 2d matrix
 }
 
 MapRags.prototype.render = function () {
 
-  var canvas = document.getElementById(this.el);
+  n = this.n;
+  m = this.m;
 
-  if (canvas.getContext){
-
-    var ctx = canvas.getContext('2d');
-
-    this.w = canvas.width;
-    this.h = canvas.height;
-
-    var n = this.n;
-    var m = this.m;
+  for (var i = 0; i < n; i++) {
+    for (var j = 0; j < m; j++) {
 
 
-    for (var i = 0; i < n; i++) {
-      for (var j = 0; j < m; j++) {
-
-
-        if (typeof this.map[i*this.m + j] !== "number") {
-          throw 'Array element is not a number'
-        }
-
-        if (this.map[i*this.m + j] === Infinity){
-          ctx.fillStyle = "rgb(0,0,0)";
-        } else {
-
-          var color = this.mapColor(this.map[i*this.m + j]);
-
-          var r = color[0];
-          var g = color[1];
-          var b = color[2];
-
-          ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-        }
-
-        var dx = Math.floor(this.w / this.m);
-        var dy = Math.floor(this.h / this.n);
-
-        var y = dx * i;
-        var x = dy * j;
-
-        ctx.fillRect (x, y, dy, dx);
-
+      if (typeof this.map[i*this.m + j] !== "number") {
+        throw 'Array element is not a number'
       }
+
+      if (this.map[i*this.m + j] === Infinity){
+        this.ctx.fillStyle = "rgb(0,0,0)";
+      } else {
+
+        var color = this.mapColor(this.map[i*this.m + j]);
+
+        var r = color[0];
+        var g = color[1];
+        var b = color[2];
+
+        this.ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+      }
+
+      var dx = Math.floor(this.w / this.m);
+      var dy = Math.floor(this.h / this.n);
+
+      var y = dx * i;
+      var x = dy * j;
+
+      this.ctx.fillRect (x, y, dy, dx);
+
     }
   }
 };
@@ -142,5 +142,8 @@ MapRags.prototype.mapColor = function(value) {
 };  
 
 MapRags.prototype.updateMap = function (map) {
-  this.update2D(map);
+  if (!!map[0].length)
+    return this.update2D(map);//TODO update 2d breaks with many rows and cols
+  
+  this.map = map;
 }
