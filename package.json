@@ -13,5 +13,8 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-contrib-jade": "^0.13.0",
     "grunt-markdown": "^0.6.1"
+  },
+  "dependencies": {
+    "marked": "^0.3.3"
   }
 }

@@ -1,37 +1,149 @@
 include ./includes/post-layout
 
   :markdown
-    #Fighting Forest Fires with Cellular Automata
+    #Forest fires and parallel celular automata
 
-    This is an algorithm I've developed for my Master's thesis...
+    When I was a young kid back in 2009, I was given the task to speed up a forest fire algoritm with GPUs. 
+    The library was used to predict the propagation of a forest fire taking in consideration several factors
+    like wind, terrain and fuel properties and it was already able to run a simulation quite fast. However, my 
+    supervisor's idea was to use the library to run uncertainty quantification and stochastic methods. This required 
+    to run several hundreds of simulation and then post processing the results to get statistics about fire propagation and error 
+    distributions. Each single simulation had to be optimized, otherwise the full amount of simulations couldn't be done 
+    faster than real time. 
 
-    There was a propagation model in C, and I used CUDA to speed the shit out of it...
+    ##dummy algoritm 
 
-    Show 1st algorithm
+    Initially I tried a very dummy implementation from the serial version. The algoritm ran something like this:
 
-  canvas#fgm-serial(width='300', height='150')
-      | Consider updating your browser.
+    - There's an outer loop that iterates over time and an inner loop that iterates in space, over the rows and coloums of the 
+    space domain.
+
+    - the inner loops looks for active cells, and propagates the fire outward, to each one of the 8 neighbours
+
+    - the ignition time of the neighbours is computed with the simple formula
+
+  .equation $$ t + \frac{l}{ROS}$$
 
   :markdown
-    Show 2nd algoritm
+    where ROS is called the rate of spread, basically the speed of the flame in that region, function of wind, moisture, terrain, etc.
 
-    boom
 
-  
-script.
-  $(document).ready(function () {
-    draw();
-  })
+    This is what the algorithm looks like. Notice that each coloured square represents a portion of the terrain, 
+    and the colour the time. So red means that the cell will burn after than yellow or green, and much after the blue cells.
 
-  var map = [ 
-    [1 , 2, 3, 4, 5 ], 
-    [1 , 2, 3, 4, 5 ],
-    [1 , 2, null, 4, 5 ],
-    [1 , 2, 3, 4, 5 ],
-    [1 , 2, 3, 4, 5 ]
-    ];
+  canvas#fgm-serial(width='400', height='400')
+      | Consider updating your browser.
 
-  function draw() {
-    var rags = new MapRags(map); rags.render('fgm-serial')
-  }
 
+
+  :markdown
+    The spatial loop run something like this:
+
+    ```Javascript
+
+      function dumbSpatialLoop(){
+
+        t = tn;
+        tn = Infinity;
+
+
+        //Spatial loop that looks for active cells, ie, cells with 
+        //ignition time = t
+        for ( row = 0; row < rows; row++){
+          for ( col = 0; col < cols; col++){
+            var idx = col + cols*row;
+            
+            //Update tn, so that tn is the minimum ignition time for all cells,
+            //in a given iteration
+            if ( ignitionMap[idx] > t && tn > ignitionMap[idx] ){
+
+              tn = ignitionMap[idx];
+              continue;
+            } 
+
+            //skips cells that already burned
+            if ( ignitionMap[idx] !== t )
+              continue;
+
+            //propagate fire for all 8 neighours
+            for (var n = 0; n < 8; n++){
+
+              //neighbour index calc
+              var ncol = col + ncols[n];
+              var nrow = row + nrows[n];
+              var nidx = ncol + nrow*cols;
+
+              //Check if neighbour is inbound
+              if ( !(nrow >= 0 && nrow < rows && ncol >= 0 && ncol < cols))
+                continue;
+
+              // skip if cell has already burned
+              if ( ignitionMap[nidx] < t )
+                continue;
+
+              //Compute neighbour cell ignition time, based on the propagation speed
+              // tcell = current_time + cell distance / flame_speed
+              igntime = t + ndist[n] / ROS;
+
+
+              //Update ignition time in the map only if the the current time is smaller
+              if(igntime < ignitionMap[nidx]){
+                ignitionMap[nidx] = igntime;
+              }
+
+              //Update tn
+              if( igntime < tn )
+                tn = igntime;
+            }
+          }
+        }
+
+
+    ```
+
+    Porting this algoritm to GPUs was very dumb and resulted in poor performance. Because of the way data was propagated from the center cell to the outward cells, I ended up with threads writing in other threads memory, ir race conditions.
+
+    ![Outer propagation](assets/img/fgm/outer.png "Outer Propagation")
+
+    The result was very poor performance and 
+
+    ![Outer propagation](assets/img/fgm/dumb.png "Outer Propagation")
+
+    I needed something smarter.
+
+    This algoritm takes the very logic aproach of propagating the fire from a cell that is burning. 
+    Ignition times in surounding cells are calculated, as we have seen, like this:
+
+    ```Javascript
+
+      igntime = t + ndist[n] / ROS;
+
+      if(igntime < ignitionMap[nidx]){
+        ignitionMap[nidx] = igntime;
+      }
+
+    ```
+    In the end, when all cells are done, the igntion time in each cells is continuously updated, so that if two cells propagate to 
+    the same cells, the minimum time of the two is considered has the defenitive ignition time.
+
+    This also means that the algoritm imposes the condition that the ignition time of each cell, is the minimum of the propagation times from the surounding cells.
+
+    This has an importante way to turn things around, because now, insteade of computing outward ignition times in each neighbour, I 
+    compute the inner cell ignition time from each neighbour.
+
+    But now the question imposes, how can I compute ignition times from cells that haven't burned yet? 
+
+    I can iterativly, starting from a random numerical field, impose the conditionin all cells, and iterativly 
+    reach a solution that I know is unique because of the condition being imposed .
+
+    Because of the data patern, I no longer have race conditions, and the algoritm is much faster because I no longer end up spending most of the time looking for empty cells.
+
+    ![Outer propagation](assets/img/fgm/inner.png "Outer Propagation")
+
+    ![Outer propagation](assets/img/fgm/smart.png "Outer Propagation")
+
+
+  canvas#fgm-parallel(width='400', height='400')
+      | Consider updating your browser.
+
+  boom
