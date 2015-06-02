@@ -44,31 +44,26 @@
     </div>
   </div>
   <div id="container">
-    <div id="content"><h1 id="forest-fires-and-parallel-celular-automata">Forest fires and parallel celular automata</h1>
-<p>When I was a young kid back in 2009, I was given the task to speed up a forest fire algoritm with GPUs. 
-The library was used to predict the propagation of a forest fire taking in consideration several factors
-like wind, terrain and fuel properties and it was already able to run a simulation quite fast. However, my 
+    <div id="content"><h1 id="forest-fires-and-parallel-cellular-automata">Forest Fires and Parallel Cellular Automata</h1>
+<p>A few years ago, for my dissertation thesis, my supervisor gave me the task to speed up a forest fire algorithm with GPUs.
+The starting point was a library called firelib. It was able to predict fire propagation speed and direction taking in consideration several factors
+like wind, terrain and fuel properties and it was already able to run simulations quite fast. However, my 
 supervisor&#39;s idea was to use the library to run uncertainty quantification and stochastic methods. This required 
-to run several hundreds of simulation and then post processing the results to get statistics about fire propagation and error 
+to run several hundreds of simulations and then post processing the results to get statistics about fire propagation and error 
 distributions. Each single simulation had to be optimized, otherwise the full amount of simulations couldn&#39;t be done 
 faster than real time. </p>
-<h2 id="dummy-algoritm">dummy algoritm</h2>
-<p>Initially I tried a very dummy implementation from the serial version. The algoritm ran something like this:</p>
-<ul>
-<li><p>There&#39;s an outer loop that iterates over time and an inner loop that iterates in space, over the rows and coloums of the 
-space domain.</p>
-</li>
-<li><p>the inner loops looks for active cells, and propagates the fire outward, to each one of the 8 neighbours</p>
-</li>
-<li><p>the ignition time of the neighbours is computed with the simple formula</p>
-</li>
-</ul>
+<h2 id="dummy-algorithm">Dummy algorithm</h2>
+<p>Initially I tried a very dummy implementation of the serial version. The algorithm ran something like this:</p>
+<p>-An outer loop iterates over time and an inner loop iterates in space, over the rows and columns of the 
+spatial domain.</p>
+<p>-The inner loop looks for active cells and propagates the fire outwards, to each one of the 8 neighbours.</p>
+<p>-The ignition time of each neighbour is computed with the formula:</p>
 
-      <div class="equation">$$ t + \frac{l}{ROS}$$</div><p>where ROS is called the rate of spread, basically the speed of the flame in that region, function of wind, moisture, terrain, etc.</p>
-<p>This is what the algorithm looks like. Notice that each coloured square represents a portion of the terrain, 
-and the colour the time. So red means that the cell will burn after than yellow or green, and much after the blue cells.</p>
+      <div class="equation">$$ t + \frac{l}{ROS}$$</div><p>where ROS is called the rate of spread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc.</p>
 
-      <canvas id="fgm-serial" width="400" height="400">Consider updating your browser.</canvas><p>The spatial loop run something like this:</p>
+      <canvas id="fgm-serial" width="400" height="400">Consider updating your browser.</canvas><p>And this is how the propagation looks like. Notice that each square represents a portion of the terrain 
+and the colour is just a representation of ignition times. So basically, red means that the cell will burn after the yellow or green ones, and much after the blue ones.</p>
+<p>The spatial loop run something like this:</p>
 <pre><code class="lang-Javascript">
   function dumbSpatialLoop(){
 
@@ -127,13 +122,14 @@ and the colour the time. So red means that the cell will burn after than yellow 
       }
     }
 </code></pre>
-<p>Porting this algoritm to GPUs was very dumb and resulted in poor performance. Because of the way data was propagated from the center cell to the outward cells, I ended up with threads writing in other threads memory, ir race conditions.</p>
+<p>Porting this algorithm to GPUs in a straightforward way resulted in very poor performance. I associated each cell with a GPU thread and ended up with threads writing in each other&#39;s memory and dealling with race conditions. </p>
 <p><img src="assets/img/fgm/outer.png" alt="Outer propagation" title="Outer Propagation"></p>
-<p>The result was very poor performance and </p>
+<p>Also, the process doesn&#39;t have a great degree of parallelism because at each time step, very few cells 
+are actually propagating and thus, require computation. Here&#39;s the speedups for several scenarios with different values for wind, fuel and moisture:     </p>
 <p><img src="assets/img/fgm/dumb.png" alt="Outer propagation" title="Outer Propagation"></p>
-<p>I needed something smarter.</p>
-<p>This algoritm takes the very logic aproach of propagating the fire from a cell that is burning. 
-Ignition times in surounding cells are calculated, as we have seen, like this:</p>
+<p>As you can see, very far from the two orders of magnitude in performance increase. I need to work on something smarter.</p>
+<h2 id="smarter-approach">Smarter approach</h2>
+<p>The algorithm we&#39;ve seen takes the very logical approach of propagating the fire from a cell that is burning in the first place, and then from the ones that have ignited and etc. Ignition times in surrounding cells are calculated, as we have seen, like this:</p>
 <pre><code class="lang-Javascript">
   igntime = t + ndist[n] / ROS;
 
@@ -141,20 +137,61 @@ Ignition times in surounding cells are calculated, as we have seen, like this:</
     ignitionMap[nidx] = igntime;
   }
 </code></pre>
-<p>In the end, when all cells are done, the igntion time in each cells is continuously updated, so that if two cells propagate to 
-the same cells, the minimum time of the two is considered has the defenitive ignition time.</p>
-<p>This also means that the algoritm imposes the condition that the ignition time of each cell, is the minimum of the propagation times from the surounding cells.</p>
-<p>This has an importante way to turn things around, because now, insteade of computing outward ignition times in each neighbour, I 
+<p>During the process, the ignition time in each cell is continuously updated, so that if two cells propagate to 
+the same cell, the minimum time of the two is considered and stored as the true ignition time.</p>
+<p>Looking at the problem in another way, what we have, is a condition that says, that the ignition time of each cell, is the minimum of the propagation times from the surrounding cells.</p>
+<p>From this, instead of computing outward ignition times in each neighbour, I 
 compute the inner cell ignition time from each neighbour.</p>
 <p>But now the question imposes, how can I compute ignition times from cells that haven&#39;t burned yet? </p>
 <p>I can iterativly, starting from a random numerical field, impose the conditionin all cells, and iterativly 
 reach a solution that I know is unique because of the condition being imposed .</p>
 <p>Because of the data patern, I no longer have race conditions, and the algoritm is much faster because I no longer end up spending most of the time looking for empty cells.</p>
 <p><img src="assets/img/fgm/inner.png" alt="Outer propagation" title="Outer Propagation"></p>
-<p><img src="assets/img/fgm/smart.png" alt="Outer propagation" title="Outer Propagation"></p>
+<pre><code class="lang-Javascript">
+  function smartSpatialLoop(){
 
-      <canvas id="fgm-parallel" width="400" height="400">Consider updating your browser.</canvas>
-      <boom></boom>
+    for ( row = 0; row &lt; rows; row++){
+      for ( col = 0; col &lt; cols; col++){
+        var idx = col + cols*row;
+
+        //skip ignition cell
+        if (ignitionMap[idx] === 0)
+          continue;
+
+        var minArray = [];
+        for (var n = 0; n &lt; 8; n++){
+
+          //neighbour index calc
+          var ncol = col + ncols[n];
+          var nrow = row + nrows[n];
+          var nidx = ncol + nrow*cols;
+
+          //Check if neighbour is inbound
+          if ( !(nrow &gt;= 0 &amp;&amp; nrow &lt; rows &amp;&amp; ncol &gt;= 0 &amp;&amp; ncol &lt; cols))
+            continue;
+
+          // compute igniton time considering that the flame moves from the neighbour to the 
+          // center cell
+          var igntime = ignitionMap[nidx] + ndist[n] / rosmap[nidx];
+          minArray.push(igntime);
+
+        }
+        //associate the minimum of the propagation times to the ignition time 
+        // of the center cell
+        ignitionMap[idx] = Math.min.apply(null, minArray);;
+
+      }
+    }
+
+  }
+</code></pre>
+
+      <canvas id="fgm-parallel" width="400" height="400">Consider updating your browser.</canvas><p><img src="assets/img/fgm/smart.png" alt="Outer propagation" title="Outer Propagation"></p>
+
+      <div id="link">paper</div>
+      <div id="css">and responsiveness</div>
+      <div id="play">on scroll</div>
+      <div id="link">do firelib</div>
       <div id="disqus_thread">    
         <script type="text/javascript">
           /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
