@@ -27,8 +27,10 @@ include ./includes/post-layout
   :markdown
     where ROS is called the rate of spread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc.
 
-  canvas#fgm-serial(width='400', height='400')
-      | Consider updating your browser.
+  .fgm-wrapper
+    canvas#fgm-serial(width='400', height='400')
+        | Consider updating your browser.
+    button.fgmrun(onclick='dumb()') Run
 
 
   :markdown
@@ -183,15 +185,16 @@ include ./includes/post-layout
 
 
     ```
-
-  canvas#fgm-parallel(width='400', height='400')
-      | Consider updating your browser.
+  .fgm-wrapper
+    canvas#fgm-parallel(width='400', height='400')
+        | Consider updating your browser.
+    button.fgmrun(onclick='smart()') Run
 
   :markdown
     ![Outer propagation](assets/img/fgm/smart.png "Outer Propagation")
 
   #link paper
   #css and responsiveness
-  #play on scroll
   #link do firelib
+  #test several devices
 

@@ -130,6 +130,28 @@ body {
 .equation {
 }
 
+.fgm-wrapper {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fgmrun {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  height: 30px;
+  width: 60px;
+  margin-top: 20px; 
+  border-width: 0px; 
+  border-radius: 0px;
+  font-family: "freight-text-pro", Georgia, Cambria, "Times New Roman", Times, serif;  
+  font-size: 18px; 
+  text-align: center; 
+  background-color: #aaa; 
+  color: #FFFFFF; 
+}
+
 @media (max-width: 800px) {
 
   /*Header - navigator*/
@@ -186,6 +208,7 @@ body {
   }
   
 }
+
 
 
 

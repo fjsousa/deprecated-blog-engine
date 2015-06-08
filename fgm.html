@@ -61,7 +61,10 @@ spatial domain.</p>
 
       <div class="equation">$$ t + \frac{l}{ROS}$$</div><p>where ROS is called the rate of spread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc.</p>
 
-      <canvas id="fgm-serial" width="400" height="400">Consider updating your browser.</canvas><p>And this is how the propagation looks like. Notice that each square represents a portion of the terrain 
+      <div class="fgm-wrapper">
+        <canvas id="fgm-serial" width="400" height="400">Consider updating your browser.</canvas>
+        <button onclick="dumb()" class="fgmrun">Run</button>
+      </div><p>And this is how the propagation looks like. Notice that each square represents a portion of the terrain 
 and the colour is just a representation of ignition times. So basically, red means that the cell will burn after the yellow or green ones, and much after the blue ones.</p>
 <p>The spatial loop run something like this:</p>
 <pre><code class="lang-Javascript">
@@ -186,12 +189,15 @@ reach a solution that I know is unique because of the condition being imposed .<
   }
 </code></pre>
 
-      <canvas id="fgm-parallel" width="400" height="400">Consider updating your browser.</canvas><p><img src="assets/img/fgm/smart.png" alt="Outer propagation" title="Outer Propagation"></p>
+      <div class="fgm-wrapper">
+        <canvas id="fgm-parallel" width="400" height="400">Consider updating your browser.</canvas>
+        <button onclick="smart()" class="fgmrun">Run</button>
+      </div><p><img src="assets/img/fgm/smart.png" alt="Outer propagation" title="Outer Propagation"></p>
 
       <div id="link">paper</div>
       <div id="css">and responsiveness</div>
-      <div id="play">on scroll</div>
       <div id="link">do firelib</div>
+      <div id="test">several devices</div>
       <div id="disqus_thread">    
         <script type="text/javascript">
           /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */

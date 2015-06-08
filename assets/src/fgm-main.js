@@ -56,18 +56,32 @@ function calcDist(ncol, nrow){
   return array;
 }
 
+
+//initialize stuff
+$(document).ready(function () {
+  var pRags = new MapRags('fgm-parallel', initmap(cols, rows, 5), rows, cols, {max: 20, min: 0}); 
+  pRags.render();
+
+  var sRags = new MapRags('fgm-serial', initmap(cols, rows, Infinity), rows, cols, {max: 20, min: 0}); 
+  sRags.render();
+});
+
 ////////////////////
 //Serial
 ////////////////////
-(function () {
+var dumbLock = false;
+function dumb() {
+
+  if (dumbLock)
+    return;
+
+  dumbLock = true;
+
   var rags;
   var ignitionMap = initmap(cols, rows, Infinity);
   var tn = t = 0;
 
-  $(document).ready(function () {
-    rags = new MapRags('fgm-serial', ignitionMap, rows, cols, {max: 20, min: 0}); 
-    rags.render();
-  });
+  var rags = new MapRags('fgm-serial', ignitionMap, rows, cols, {max: 20, min: 0}); 
 
   function dumbSpatialLoop(){
 
@@ -125,7 +139,6 @@ function calcDist(ncol, nrow){
         }
       }
     }
-
   }
 
   var itt = 0;
@@ -139,29 +152,32 @@ function calcDist(ncol, nrow){
         rags.render();      
       }
 
-      if (tn === Infinity) 
+      if (tn === Infinity) {
+        dumbLock = false;
         return;
+      }
       
       call();
       
     }, 100);  
   })();
-})();
+}
 
 ////////////////////
 //Parallel
 ////////////////////
-var mp;
-(function () {
+var smartLock = false;
+function smart() {
+
+  if (smartLock)
+    return;
+
+  smartLock = true;
+
   var ignitionMap = initmap(cols, rows, 5);
-  mp = ignitionMap;
   var monitor;
 
   var rags = new MapRags('fgm-parallel', ignitionMap, rows, cols, {max: 20, min: 0}); 
-
-  $(document).ready(function () {
-    rags.render();
-  });
 
   function smartSpatialLoop(){
 
@@ -200,7 +216,7 @@ var mp;
 
   }
 
-  var itt = 0;
+  var itt=0;
   (function call(){
     setTimeout(function () {
 
@@ -211,8 +227,10 @@ var mp;
         rags.render();      
       }
 
-      if (monitor === ignitionMap[0])
+      if (monitor === ignitionMap[0]){
+        smartLock = false;
         return;
+      }
 
       monitor = ignitionMap[0];
       
@@ -220,4 +238,4 @@ var mp;
       
     }, 500);  
   })();
-})();
+}
