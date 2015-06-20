@@ -3,42 +3,42 @@ include ./includes/post-layout
   :markdown
     #Forest Fires and Parallel Cellular Automata
 
-    A few years ago, for my dissertation thesis, my supervisor gave me the task to speed up a forest fire algorithm with GPUs.
-    The starting point was a library called firelib. It was able to predict fire propagation speed and direction taking in consideration several factors
-    like wind, terrain and fuel properties and it was already able to run simulations quite fast. However, my 
-    supervisor's idea was to use the library to run uncertainty quantification and stochastic methods. This required 
-    to run several hundreds of simulations and then post processing the results to get statistics about fire propagation and error 
-    distributions. Each single simulation had to be optimized, otherwise the full amount of simulations couldn't be done 
-    faster than real time. 
+    Forest fire numerical models use Cellular Automata (CA) to simulate fire propagation. In this blog post, I'll show you two versions of a CA model, a trivial and a parallel version I developed during my Masters.
 
-    ##Dummy algorithm 
+    Both versions were ported to[Nvidia GPUs](https://en.wikipedia.org/wiki/CUDA) with the aim of speeding up the existing single core implementation. 
 
-    Initially I tried a very dummy implementation of the serial version. The algorithm ran something like this:
+    Initially, a direct, naive port was attempted which wasn't very performant. This lead me to reformulate the algorithm so that is was fully parallel and therefore, more suitable to the many-core architecture of the GPU.
 
-    -An outer loop iterates over time and an inner loop iterates in space, over the rows and columns of the 
-    spatial domain.
+    The performance increase ended up being due to the reformation of the algoritm and not to a tweaking  or fine tunning of the naive port in the GPU. 
 
-    -The inner loop looks for active cells and propagates the fire outwards, to each one of the 8 neighbours.
 
-    -The ignition time of each neighbour is computed with the formula:
+    ##Naive algorithm 
+
+    The existing algorithm was the following:
+
+    -An outer loop iterates over time and an inner loop iterates in space, over the rows and columns of the forest numerical terrain.
+
+    -The inner loop looks for active cells in a map of ignition times and propagates the fire outwards, to each one of the 8 neighbours.
+
+    -The ignition time of each neighbour is computed with the formula below, and the ignition map is updated:
 
   .equation $$ t + \frac{l}{ROS}$$
 
   :markdown
-    where ROS is called the rate of spread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc.
+    where *ROS* is the **R**ate **O**f **S**pread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc.
 
   .fgm-wrapper
     canvas#fgm-serial(width='400', height='400')
         | Consider updating your browser.
-    button.fgmrun(onclick='dumb()') Run
+    button.fgmrun(onclick='dumb.run()') Run
 
 
   :markdown
-    And this is how the propagation looks like. Notice that each square represents a portion of the terrain 
-    and the colour is just a representation of ignition times. So basically, red means that the cell will burn after the yellow or green ones, and much after the blue ones.
+    If you press **Run**, you'll see an animation of the fire propagation with the naive version of the CA. Notice that each square represents a portion of the terrain 
+    and the colour is just a linear scale that maps to ignition time value. The scale goes from blue, to red, white is the starting point and black means the cell is unburned.
 
   
-    The spatial loop run something like this:
+    This is the JavaScript code that runs the spatial loop. If you inspect this page, you'll see a very similar code:
 
     ```Javascript
 
@@ -102,7 +102,7 @@ include ./includes/post-layout
 
     ```
 
-    Porting this algorithm to GPUs in a straightforward way resulted in very poor performance. I associated each cell with a GPU thread and ended up with threads writing in each other's memory and dealling with race conditions. 
+    As I said, porting this algorithm to GPUs in a straightforward way resulted in very poor performance. I associated each cell with a GPU thread and ended up with threads writing in each other's memory and dealling with race conditions. 
 
     ![Outer propagation](assets/img/fgm/outer.png "Outer Propagation")
 
@@ -111,11 +111,13 @@ include ./includes/post-layout
 
     ![Outer propagation](assets/img/fgm/dumb.png "Outer Propagation")
 
-    As you can see, very far from the two orders of magnitude in performance increase. I need to work on something smarter.
+    As you can see, very far from the two orders of magnitude in performance increase you usually get with GPUs.
 
     ##Smarter approach 
 
-    The algorithm we've seen takes the very logical approach of propagating the fire from a cell that is burning in the first place, and then from the ones that have ignited and etc. Ignition times in surrounding cells are calculated, as we have seen, like this:
+    The algorithm we've seen mimics the way fire propagates in real life, propagating the fire to adjacent cells, one at the time. 
+
+    Ignition times in surrounding cells are calculated, as we have seen, like this:
 
     ```Javascript
 
@@ -126,23 +128,26 @@ include ./includes/post-layout
       }
 
     ```
-    During the process, the ignition time in each cell is continuously updated, so that if two cells propagate to 
-    the same cell, the minimum time of the two is considered and stored as the true ignition time.
+    During the process, the ignition time in each cell is continuously updated, so that if two cells propagate to the same cell, the minimum time of the two is considered and stored as the true ignition time.
 
-    Looking at the problem in another way, what we have, is a condition that says, that the ignition time of each cell, is the minimum of the propagation times from the surrounding cells.
+    Looking at the problem in another way, what we have is a condition that can be stated as follows: the ignition time of each cell, is always the minimum of the set of ignition times accounted from the 8 surrounding cells.
 
-    From this, instead of computing outward ignition times in each neighbour, I 
+    From this, instead of computing outward ignition times at each neighbour, I 
     compute the inner cell ignition time from each neighbour.
-
-    But now the question imposes, how can I compute ignition times from cells that haven't burned yet? 
-
-    I can iterativly, starting from a random numerical field, impose the conditionin all cells, and iterativly 
-    reach a solution that I know is unique because of the condition being imposed .
-
-    Because of the data patern, I no longer have race conditions, and the algoritm is much faster because I no longer end up spending most of the time looking for empty cells.
 
     ![Outer propagation](assets/img/fgm/inner.png "Outer Propagation")
 
+    But now the question is, how can I compute ignition times from cells that haven't burned yet? 
+
+    The solution is to do it iteratively, ie, to start from a random ignition map and compute each new map function of the previous one, until there is virtually no difference between any two consecutive ignition maps. 
+
+  .fgm-wrapper
+    canvas#fgm-parallel(width='400', height='400')
+        | Consider updating your browser.
+    button.fgmrun(onclick='smart.run()') Run
+
+  :markdown
+    Because of the data patern, I no longer have race conditions, and the algorithm is much faster because I no longer end up spending most of the time looking for empty cells. This is how the spatial loop looks like:
 
     ```Javascript
 
@@ -185,16 +190,27 @@ include ./includes/post-layout
 
 
     ```
-  .fgm-wrapper
-    canvas#fgm-parallel(width='400', height='400')
-        | Consider updating your browser.
-    button.fgmrun(onclick='smart()') Run
 
-  :markdown
+    The algorithm is much faster and takes advantage of the many core architecture of the GPU. 
+    Much higher speedups, scales way better. 
+
     ![Outer propagation](assets/img/fgm/smart.png "Outer Propagation")
 
-  #link paper
-  #css and responsiveness
-  #link do firelib
-  #test several devices
+    Two models side by side. Iteration time interval is 100 ms. 
+
+  .fgm-wrapper(style='display:flex;justify-content:center;align-items:center;width:60%;')
+    canvas#fgm-parallel-twin(width='250', height='250')
+        | Consider updating your browser.
+    canvas#fgm-serial-twin(width='250', height='250')
+        | Consider updating your browser.
+
+  button.fgmrun(onclick='smart2.run();dumb2.run();') Run
+
+
+    #link paper
+    #css and responsiveness
+    #link do firelib
+    #test several devices
+
+  
 

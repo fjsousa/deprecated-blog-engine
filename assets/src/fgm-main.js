@@ -58,30 +58,47 @@ function calcDist(ncol, nrow){
 
 
 //initialize stuff
+var dumb, smart, dumb2, smart2;
 $(document).ready(function () {
   var pRags = new MapRags('fgm-parallel', initmap(cols, rows, 5), rows, cols, {max: 20, min: 0}); 
   pRags.render();
 
   var sRags = new MapRags('fgm-serial', initmap(cols, rows, Infinity), rows, cols, {max: 20, min: 0}); 
   sRags.render();
-});
 
+  var ptwinRags = new MapRags('fgm-parallel-twin', initmap(cols, rows, 5), rows, cols, {max: 20, min: 0}); 
+  ptwinRags.render();
+
+  var stwinRags = new MapRags('fgm-serial-twin', initmap(cols, rows, Infinity), rows, cols, {max: 20, min: 0}); 
+  stwinRags.render();
+
+  dumb = new Dumb('fgm-serial');
+  smart = new Smart('fgm-parallel');
+  dumb2 = new Dumb('fgm-serial-twin');
+  smart2 = new Smart('fgm-parallel-twin');
+});
 ////////////////////
 //Serial
 ////////////////////
-var dumbLock = false;
-function dumb() {
+var Dumb = function (el){
+  this.el = el;
+  this.dumbLock = false;
+};
 
-  if (dumbLock)
+Dumb.prototype.run = function() {
+
+  var that = this;
+
+  if (this.dumbLock)
     return;
 
-  dumbLock = true;
+  this.dumbLock = true;
 
   var rags;
   var ignitionMap = initmap(cols, rows, Infinity);
   var tn = t = 0;
 
-  var rags = new MapRags('fgm-serial', ignitionMap, rows, cols, {max: 20, min: 0}); 
+  var rags = new MapRags(this.el, ignitionMap, rows, cols, {max: 20, min: 0}); 
 
   function dumbSpatialLoop(){
 
@@ -153,7 +170,7 @@ function dumb() {
       }
 
       if (tn === Infinity) {
-        dumbLock = false;
+        that.dumbLock = false;
         return;
       }
       
@@ -166,18 +183,22 @@ function dumb() {
 ////////////////////
 //Parallel
 ////////////////////
-var smartLock = false;
-function smart() {
+var Smart = function(el){
+  this.el = el;
+  this.smartLock = false;
+}
 
-  if (smartLock)
+Smart.prototype.run = function() {
+  var that = this;
+  if (this.smartLock)
     return;
 
-  smartLock = true;
+  this.smartLock = true;
 
   var ignitionMap = initmap(cols, rows, 5);
   var monitor;
 
-  var rags = new MapRags('fgm-parallel', ignitionMap, rows, cols, {max: 20, min: 0}); 
+  var rags = new MapRags(this.el, ignitionMap, rows, cols, {max: 20, min: 0}); 
 
   function smartSpatialLoop(){
 
@@ -228,7 +249,7 @@ function smart() {
       }
 
       if (monitor === ignitionMap[0]){
-        smartLock = false;
+        that.smartLock = false;
         return;
       }
 
@@ -236,6 +257,7 @@ function smart() {
       
       call();
       
-    }, 500);  
+    }, 100);  
   })();
 }
+
