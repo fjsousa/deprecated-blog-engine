@@ -30,7 +30,7 @@ include ./includes/post-layout
   .fgm-wrapper
     canvas#fgm-serial(width='400', height='400')
         | Consider updating your browser.
-    button.fgmrun(onclick='dumb.run()') Run
+    button.actionbutton(onclick='dumb.run()') Run
 
 
   :markdown
@@ -42,62 +42,63 @@ include ./includes/post-layout
 
     ```Javascript
 
-      function dumbSpatialLoop(){
+    function dumbSpatialLoop(){
 
-        t = tn;
-        tn = Infinity;
+      t = tn;
+      tn = Infinity;
 
 
-        //Spatial loop that looks for active cells, ie, cells with 
-        //ignition time = t
-        for ( row = 0; row < rows; row++){
-          for ( col = 0; col < cols; col++){
-            var idx = col + cols*row;
-            
-            //Update tn, so that tn is the minimum ignition time for all cells,
-            //in a given iteration
-            if ( ignitionMap[idx] > t && tn > ignitionMap[idx] ){
+      //Spatial loop that looks for active cells, ie, cells with 
+      //ignition time = t
+      for ( row = 0; row < rows; row++){
+        for ( col = 0; col < cols; col++){
+          var idx = col + cols*row;
+          
+          //Update tn, so that tn is the minimum ignition time for all cells,
+          //in a given iteration
+          if ( ignitionMap[idx] > t && tn > ignitionMap[idx] ){
 
-              tn = ignitionMap[idx];
+            tn = ignitionMap[idx];
+            continue;
+          } 
+
+          //skips cells that already burned
+          if ( ignitionMap[idx] !== t )
+            continue;
+
+          //propagate fire for all 8 neighours
+          for (var n = 0; n < 8; n++){
+
+            //neighbour index calc
+            var ncol = col + ncols[n];
+            var nrow = row + nrows[n];
+            var nidx = ncol + nrow*cols;
+
+            //Check if neighbour is inbound
+            if ( !(nrow >= 0 && nrow < rows && ncol >= 0 && ncol < cols))
               continue;
-            } 
 
-            //skips cells that already burned
-            if ( ignitionMap[idx] !== t )
+            // skip if cell has already burned
+            if ( ignitionMap[nidx] < t )
               continue;
 
-            //propagate fire for all 8 neighours
-            for (var n = 0; n < 8; n++){
-
-              //neighbour index calc
-              var ncol = col + ncols[n];
-              var nrow = row + nrows[n];
-              var nidx = ncol + nrow*cols;
-
-              //Check if neighbour is inbound
-              if ( !(nrow >= 0 && nrow < rows && ncol >= 0 && ncol < cols))
-                continue;
-
-              // skip if cell has already burned
-              if ( ignitionMap[nidx] < t )
-                continue;
-
-              //Compute neighbour cell ignition time, based on the propagation speed
-              // tcell = current_time + cell distance / flame_speed
-              igntime = t + ndist[n] / ROS;
+            //Compute neighbour cell ignition time, based on the propagation speed
+            // tcell = current_time + cell distance / flame_speed
+            igntime = t + ndist[n] / ROS;
 
 
-              //Update ignition time in the map only if the the current time is smaller
-              if(igntime < ignitionMap[nidx]){
-                ignitionMap[nidx] = igntime;
-              }
-
-              //Update tn
-              if( igntime < tn )
-                tn = igntime;
+            //Update ignition time in the map only if the the current time is smaller
+            if(igntime < ignitionMap[nidx]){
+              ignitionMap[nidx] = igntime;
             }
+
+            //Update tn
+            if( igntime < tn )
+              tn = igntime;
           }
         }
+      }
+    }
 
 
     ```
@@ -144,49 +145,49 @@ include ./includes/post-layout
   .fgm-wrapper
     canvas#fgm-parallel(width='400', height='400')
         | Consider updating your browser.
-    button.fgmrun(onclick='smart.run()') Run
+    button.actionbutton(onclick='smart.run()') Run
 
   :markdown
     This is how the spatial loop looks like:
 
     ```Javascript
 
-      function smartSpatialLoop(){
+    function smartSpatialLoop(){
 
-        for ( row = 0; row < rows; row++){
-          for ( col = 0; col < cols; col++){
-            var idx = col + cols*row;
+      for ( row = 0; row < rows; row++){
+        for ( col = 0; col < cols; col++){
+          var idx = col + cols*row;
 
-            //skip ignition cell
-            if (ignitionMap[idx] === 0)
+          //skip ignition cell
+          if (ignitionMap[idx] === 0)
+            continue;
+
+          var minArray = [];
+          for (var n = 0; n < 8; n++){
+
+            //neighbour index calc
+            var ncol = col + ncols[n];
+            var nrow = row + nrows[n];
+            var nidx = ncol + nrow*cols;
+
+            //Check if neighbour is inbound
+            if ( !(nrow >= 0 && nrow < rows && ncol >= 0 && ncol < cols))
               continue;
 
-            var minArray = [];
-            for (var n = 0; n < 8; n++){
-
-              //neighbour index calc
-              var ncol = col + ncols[n];
-              var nrow = row + nrows[n];
-              var nidx = ncol + nrow*cols;
-
-              //Check if neighbour is inbound
-              if ( !(nrow >= 0 && nrow < rows && ncol >= 0 && ncol < cols))
-                continue;
-
-              // compute igniton time considering that the flame moves from the neighbour to the 
-              // center cell
-              var igntime = ignitionMap[nidx] + ndist[n] / rosmap[nidx];
-              minArray.push(igntime);
-
-            }
-            //associate the minimum of the propagation times to the ignition time 
-            // of the center cell
-            ignitionMap[idx] = Math.min.apply(null, minArray);;
+            // compute igniton time considering that the flame moves from the neighbour to the 
+            // center cell
+            var igntime = ignitionMap[nidx] + ndist[n] / rosmap[nidx];
+            minArray.push(igntime);
 
           }
-        }
+          //associate the minimum of the propagation times to the ignition time 
+          // of the center cell
+          ignitionMap[idx] = Math.min.apply(null, minArray);;
 
+        }
       }
+
+    }
 
 
     ```
@@ -197,16 +198,21 @@ include ./includes/post-layout
 
     The two models side by side, with the same iteration interval of 100ms. Notice that the conditions are random, so each time you refresh the page, you'll get a slightly different simulation: 
 
-  .fgm-wrapper(style='display:flex;justify-content:center;align-items:center;width:60%;')
+  .fgm-wrapper(style='display:flex;justify-content:center;align-items:center;width:90%;')
     canvas#fgm-parallel-twin(width='250', height='250')
         | Consider updating your browser.
     canvas#fgm-serial-twin(width='250', height='250')
         | Consider updating your browser.
 
-  button.fgmrun(onclick='smart2.run();dumb2.run();') Run
+  button.actionbutton(onclick='smart2.run();dumb2.run();') Run
 
   :markdown
+    a cena corre mais rapido porque mudaste o algoritmo, e n porque andaste a ler manuais de documentacao a descobrir como fazer finetunning de uma ma ideia a partida
     If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.
+
+//- rags
+script(type='text/javascript', src='assets/src/rags.js')
+script(type='text/javascript', src='assets/src/fgm-main.js')
 
 
   
