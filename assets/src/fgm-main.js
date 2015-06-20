@@ -26,18 +26,22 @@ function initmap(cols, rows, value){
 function rosmap(cols, rows){
   
   var array = new Array(cols*rows);
+  var r;
 
   for (var row = 0;  row < rows; row++) {
     for (var col = 0;  col < cols; col++) {
       
       if ( col > cols/3 && col < cols*2/3){
         if (row < rows*2/3 && row > rows/3){
-          array[col + cols*row] = Math.random()*2;
+          r = Math.random()*2;
+          array[col + cols*row] = r >= 0.4 ? r : 0.4;
           continue;
         }
       }
 
-      array[col + cols*row] = Math.random();
+      //cap
+      r = Math.random();
+      array[col + cols*row] = r >= 0.4 ? r : 0.4;
 
     }
   }

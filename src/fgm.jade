@@ -147,7 +147,7 @@ include ./includes/post-layout
     button.fgmrun(onclick='smart.run()') Run
 
   :markdown
-    Because of the data patern, I no longer have race conditions, and the algorithm is much faster because I no longer end up spending most of the time looking for empty cells. This is how the spatial loop looks like:
+    This is how the spatial loop looks like:
 
     ```Javascript
 
@@ -191,12 +191,11 @@ include ./includes/post-layout
 
     ```
 
-    The algorithm is much faster and takes advantage of the many core architecture of the GPU. 
-    Much higher speedups, scales way better. 
+    The algorithm is much more efficient because I no longer spend most of the time looking for empty cells. Also, because of the it's parallelism, I there's no race condition and consequent serialization. The performance gains are around two orders of magnitude.
 
     ![Outer propagation](assets/img/fgm/smart.png "Outer Propagation")
 
-    Two models side by side. Iteration time interval is 100 ms. 
+    The two models side by side, with the same iteration interval of 100ms. Notice that the conditions are random, so each time you refresh the page, you'll get a slightly different simulation: 
 
   .fgm-wrapper(style='display:flex;justify-content:center;align-items:center;width:60%;')
     canvas#fgm-parallel-twin(width='250', height='250')
@@ -206,11 +205,9 @@ include ./includes/post-layout
 
   button.fgmrun(onclick='smart2.run();dumb2.run();') Run
 
+  :markdown
+    If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.
 
-    #link paper
-    #css and responsiveness
-    #link do firelib
-    #test several devices
 
   
 

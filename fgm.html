@@ -148,7 +148,7 @@ compute the inner cell ignition time from each neighbour.</p>
       <div class="fgm-wrapper">
         <canvas id="fgm-parallel" width="400" height="400">Consider updating your browser.</canvas>
         <button onclick="smart.run()" class="fgmrun">Run</button>
-      </div><p>Because of the data patern, I no longer have race conditions, and the algorithm is much faster because I no longer end up spending most of the time looking for empty cells. This is how the spatial loop looks like:</p>
+      </div><p>This is how the spatial loop looks like:</p>
 <pre><code class="lang-Javascript">
   function smartSpatialLoop(){
 
@@ -187,21 +187,16 @@ compute the inner cell ignition time from each neighbour.</p>
 
   }
 </code></pre>
-<p>The algorithm is much faster and takes advantage of the many core architecture of the GPU. 
-Much higher speedups, scales way better. </p>
+<p>The algorithm is much more efficient because I no longer spend most of the time looking for empty cells. Also, because of the it&#39;s parallelism, I there&#39;s no race condition and consequent serialization. The performance gains are around two orders of magnitude.</p>
 <p><img src="assets/img/fgm/smart.png" alt="Outer propagation" title="Outer Propagation"></p>
-<p>Two models side by side. Iteration time interval is 100 ms. </p>
+<p>The two models side by side, with the same iteration interval of 100ms. Notice that the conditions are random, so each time you refresh the page, you&#39;ll get a slightly different simulation: </p>
 
       <div style="display:flex;justify-content:center;align-items:center;width:60%;" class="fgm-wrapper">
         <canvas id="fgm-parallel-twin" width="250" height="250">Consider updating your browser.</canvas>
         <canvas id="fgm-serial-twin" width="250" height="250">Consider updating your browser.</canvas>
       </div>
-      <button onclick="smart2.run();dumb2.run();" class="fgmrun">Run
-        <div id="link">paper</div>
-        <div id="css">and responsiveness</div>
-        <div id="link">do firelib</div>
-        <div id="test">several devices</div>
-      </button>
+      <button onclick="smart2.run();dumb2.run();" class="fgmrun">Run</button><p>If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.</p>
+
       <div id="disqus_thread">    
         <script type="text/javascript">
           /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
