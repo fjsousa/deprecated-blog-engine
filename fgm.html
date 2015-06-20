@@ -73,8 +73,8 @@ function dumbSpatialLoop(){
   tn = Infinity;
 
 
-  //Spatial loop that looks for active cells, ie, cells with 
-  //ignition time = t
+  //Spatial loop that looks for active cells, 
+  //ie, cells with ignition time = t
   for ( row = 0; row &lt; rows; row++){
     for ( col = 0; col &lt; cols; col++){
       var idx = col + cols*row;
@@ -112,7 +112,7 @@ function dumbSpatialLoop(){
 
         //Compute neighbour cell ignition time, 
         //based on the propagation speed
-        //tcell = current_time + cell distance / flame_speed
+        //tcell = t + cell dist / flame_speed
         igntime = t + ndist[n] / ROS;
 
 
@@ -184,7 +184,8 @@ function smartSpatialLoop(){
 
         //compute ignition time considering that the
         //flame moves from the neighbour to the center cell
-        var igntime = ignitionMap[nidx] + ndist[n] / rosmap[nidx];
+        var igntime = ignitionMap[nidx] 
+          + ndist[n] / rosmap[nidx];
         minArray.push(igntime);
 
       }
