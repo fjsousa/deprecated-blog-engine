@@ -227,6 +227,10 @@ body {
     max-width: 90%; 
   }
 
+  .hljs {
+    font-size: 15px;
+  }
+
   #menu {
     display: none;
   }

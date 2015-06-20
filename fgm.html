@@ -79,9 +79,11 @@ function dumbSpatialLoop(){
     for ( col = 0; col &lt; cols; col++){
       var idx = col + cols*row;
 
-      //Update tn, so that tn is the minimum ignition time for all cells,
+      //Update tn, so that tn is the minimum
+      //ignition time for all cells,
       //in a given iteration
-      if ( ignitionMap[idx] &gt; t &amp;&amp; tn &gt; ignitionMap[idx] ){
+      if ( ignitionMap[idx] &gt; t &amp;&amp; 
+        tn &gt; ignitionMap[idx] ){
 
         tn = ignitionMap[idx];
         continue;
@@ -100,19 +102,22 @@ function dumbSpatialLoop(){
         var nidx = ncol + nrow*cols;
 
         //Check if neighbour is inbound
-        if ( !(nrow &gt;= 0 &amp;&amp; nrow &lt; rows &amp;&amp; ncol &gt;= 0 &amp;&amp; ncol &lt; cols))
+        if ( !(nrow &gt;= 0 &amp;&amp; nrow &lt; rows &amp;&amp; 
+          ncol &gt;= 0 &amp;&amp; ncol &lt; cols) )
           continue;
 
         // skip if cell has already burned
         if ( ignitionMap[nidx] &lt; t )
           continue;
 
-        //Compute neighbour cell ignition time, based on the propagation speed
-        // tcell = current_time + cell distance / flame_speed
+        //Compute neighbour cell ignition time, 
+        //based on the propagation speed
+        //tcell = current_time + cell distance / flame_speed
         igntime = t + ndist[n] / ROS;
 
 
-        //Update ignition time in the map only if the the current time is smaller
+        //Update ignition time in the map only if
+        //the the current time is smaller
         if(igntime &lt; ignitionMap[nidx]){
           ignitionMap[nidx] = igntime;
         }
@@ -173,17 +178,18 @@ function smartSpatialLoop(){
         var nidx = ncol + nrow*cols;
 
         //Check if neighbour is inbound
-        if ( !(nrow &gt;= 0 &amp;&amp; nrow &lt; rows &amp;&amp; ncol &gt;= 0 &amp;&amp; ncol &lt; cols))
+        if ( !(nrow &gt;= 0 &amp;&amp; nrow &lt; rows 
+          &amp;&amp; ncol &gt;= 0 &amp;&amp; ncol &lt; cols) )
           continue;
 
-        // compute igniton time considering that the flame moves from the neighbour to the 
-        // center cell
+        //compute ignition time considering that the
+        //flame moves from the neighbour to the center cell
         var igntime = ignitionMap[nidx] + ndist[n] / rosmap[nidx];
         minArray.push(igntime);
 
       }
-      //associate the minimum of the propagation times to the ignition time 
-      // of the center cell
+      //associate the minimum of the ignition times
+      //to the ignition time of the center cell
       ignitionMap[idx] = Math.min.apply(null, minArray);;
 
     }
