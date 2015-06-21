@@ -1,15 +1,15 @@
 include ./includes/post-layout
 
   :markdown
-    #Forest Fires and Parallel Cellular Automata
+    #Forest Fires and Parallel Cellular Automata, going from 8x to 240x faster with GPUs
 
     Forest fire numerical models use Cellular Automata (CA) to simulate fire propagation. In this blog post, I'll show you two versions of a CA model, a trivial and a parallel version I developed during my Masters.
 
     Both versions were ported to[Nvidia GPUs](https://en.wikipedia.org/wiki/CUDA) with the aim of speeding up the existing single core implementation. 
 
-    Initially, a direct, naive port was attempted which wasn't very performant. This lead me to reformulate the algorithm so that is was fully parallel and therefore, more suitable to the many-core architecture of the GPU.
+    Initially, a direct, naive port was attempted which wasn't very performant. This lead me to reformulate the algorithm so that it was fully parallel and therefore, more suitable to the many-core architecture of the GPU.
 
-    The performance increase ended up being due to the reformation of the algoritm and not to a tweaking  or fine tunning of the naive port in the GPU. 
+    Performance increase was only achieved with a rethinking of the algorithm, not by tweaking and fine tunning the GPU parameters of a flawed approach.
 
 
     ##Naive algorithm 
@@ -20,7 +20,9 @@ include ./includes/post-layout
 
     -The inner loop looks for active cells in a map of ignition times and propagates the fire outwards, to each one of the 8 neighbours.
 
-    -The ignition time of each neighbour is computed with the formula below, and the ignition map is updated:
+    ![Outer propagation](assets/img/fgm/outer.png "Outer Propagation")
+
+    -The ignition time of each neighbour is computed with the formula below. The ignition map is then updated:
 
   .equation $$ t + \frac{l}{ROS}$$
 
@@ -35,7 +37,7 @@ include ./includes/post-layout
 
   :markdown
     If you press **Run**, you'll see an animation of the fire propagation with the naive version of the CA. Notice that each square represents a portion of the terrain 
-    and the colour is just a linear scale that maps to ignition time value. The scale goes from blue, to red, white is the starting point and black means the cell is unburned.
+    and the colour is just a linear scale that maps to ignition time. The scale goes from blue, to red, white is the starting point and black means the cell is unburned.
 
   
     This is the JavaScript code that runs the spatial loop. If you inspect this page, you'll see a very similar code:
@@ -109,8 +111,6 @@ include ./includes/post-layout
     ```
 
     As I said, porting this algorithm to GPUs in a straightforward way resulted in very poor performance. I associated each cell with a GPU thread and ended up with threads writing in each other's memory and dealling with race conditions. 
-
-    ![Outer propagation](assets/img/fgm/outer.png "Outer Propagation")
 
     Also, the process doesn't have a great degree of parallelism because at each time step, very few cells 
     are actually propagating and thus, require computation. Here's the speedups for several scenarios with different values for wind, fuel and moisture:     
@@ -214,7 +214,6 @@ include ./includes/post-layout
   button.actionbutton(onclick='smart2.run();dumb2.run();') Run
 
   :markdown
-    a cena corre mais rapido porque mudaste o algoritmo, e n porque andaste a ler manuais de documentacao a descobrir como fazer finetunning de uma ma ideia a partida
     If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.
 
 //- rags

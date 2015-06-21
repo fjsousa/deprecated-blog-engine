@@ -20,7 +20,7 @@
         <div id="social-media"><a href="//pt.linkedin.com/pub/flávio-sousa/3a/a06/770/" target="_blank"><i class="fa fa-linkedin"></i></a><a href="//twitter.com/fjmarujo" target="_blank"><i class="fa fa-twitter"></i></a><a href="//github.com/fjsousa" target="_blank"><i class="fa fa-github"></i></a></div>
       </div>
     </div>
-    <div id="menu"><a href="webrtc-part1.html"><span id="nav-item-title">WebRTC Part 1</span></a><span id="nav-item-date">(27-02-2015)</span><br><a href="webrtc-part2.html"><span id="nav-item-title">WebRTC Part 2</span></a><span id="nav-item-date">(20-03-2015)</span></div>
+    <div id="menu"><a href="webrtc-part1.html"><span id="nav-item-title">WebRTC Part 1</span></a><span id="nav-item-date">(27-02-2015)</span><br><a href="webrtc-part2.html"><span id="nav-item-title">WebRTC Part 2</span></a><span id="nav-item-date">(20-03-2015)</span><br><a href="fgm.html"><span id="nav-item-title">Cellular Automata</span></a><span id="nav-item-date">(21-06-2015)</span></div>
     <div id="footer-bar">
       <div id="mc_embed_signup">
         <form id="mc-embedded-subscribe-form" action="//github.us10.list-manage.com/subscribe/post?u=5b26850668dc6b3f84778ca5e&amp;id=cb5f4eedfe" method="post" name="mc-embedded-subscribe-form" target="_blank" novalidate="" class="validate">
@@ -47,16 +47,17 @@
     </div>
   </div>
   <div id="container">
-    <div id="content"><h1 id="forest-fires-and-parallel-cellular-automata">Forest Fires and Parallel Cellular Automata</h1>
+    <div id="content"><h1 id="forest-fires-and-parallel-cellular-automata-going-from-8x-to-240x-faster-with-gpus">Forest Fires and Parallel Cellular Automata, going from 8x to 240x faster with GPUs</h1>
 <p>Forest fire numerical models use Cellular Automata (CA) to simulate fire propagation. In this blog post, I&#39;ll show you two versions of a CA model, a trivial and a parallel version I developed during my Masters.</p>
 <p>Both versions were ported to<a href="https://en.wikipedia.org/wiki/CUDA">Nvidia GPUs</a> with the aim of speeding up the existing single core implementation. </p>
-<p>Initially, a direct, naive port was attempted which wasn&#39;t very performant. This lead me to reformulate the algorithm so that is was fully parallel and therefore, more suitable to the many-core architecture of the GPU.</p>
-<p>The performance increase ended up being due to the reformation of the algoritm and not to a tweaking  or fine tunning of the naive port in the GPU. </p>
+<p>Initially, a direct, naive port was attempted which wasn&#39;t very performant. This lead me to reformulate the algorithm so that it was fully parallel and therefore, more suitable to the many-core architecture of the GPU.</p>
+<p>Performance increase was only achieved with a rethinking of the algorithm, not by tweaking and fine tunning the GPU parameters of a flawed approach.</p>
 <h2 id="naive-algorithm">Naive algorithm</h2>
 <p>The existing algorithm was the following:</p>
 <p>-An outer loop iterates over time and an inner loop iterates in space, over the rows and columns of the forest numerical terrain.</p>
 <p>-The inner loop looks for active cells in a map of ignition times and propagates the fire outwards, to each one of the 8 neighbours.</p>
-<p>-The ignition time of each neighbour is computed with the formula below, and the ignition map is updated:</p>
+<p><img src="assets/img/fgm/outer.png" alt="Outer propagation" title="Outer Propagation"></p>
+<p>-The ignition time of each neighbour is computed with the formula below. The ignition map is then updated:</p>
 
       <div class="equation">$$ t + \frac{l}{ROS}$$</div><p>where <em>ROS</em> is the <strong>R</strong>ate <strong>O</strong>f <strong>S</strong>pread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc.</p>
 
@@ -64,7 +65,7 @@
         <canvas id="fgm-serial" width="400" height="400">Consider updating your browser.</canvas>
         <button onclick="dumb.run()" class="actionbutton">Run</button>
       </div><p>If you press <strong>Run</strong>, you&#39;ll see an animation of the fire propagation with the naive version of the CA. Notice that each square represents a portion of the terrain 
-and the colour is just a linear scale that maps to ignition time value. The scale goes from blue, to red, white is the starting point and black means the cell is unburned.</p>
+and the colour is just a linear scale that maps to ignition time. The scale goes from blue, to red, white is the starting point and black means the cell is unburned.</p>
 <p>This is the JavaScript code that runs the spatial loop. If you inspect this page, you&#39;ll see a very similar code:</p>
 <pre><code class="lang-Javascript">
 function dumbSpatialLoop(){
@@ -131,7 +132,6 @@ function dumbSpatialLoop(){
 }
 </code></pre>
 <p>As I said, porting this algorithm to GPUs in a straightforward way resulted in very poor performance. I associated each cell with a GPU thread and ended up with threads writing in each other&#39;s memory and dealling with race conditions. </p>
-<p><img src="assets/img/fgm/outer.png" alt="Outer propagation" title="Outer Propagation"></p>
 <p>Also, the process doesn&#39;t have a great degree of parallelism because at each time step, very few cells 
 are actually propagating and thus, require computation. Here&#39;s the speedups for several scenarios with different values for wind, fuel and moisture:     </p>
 <p><img src="assets/img/fgm/dumb.png" alt="Outer propagation" title="Outer Propagation"></p>
@@ -206,8 +206,7 @@ function smartSpatialLoop(){
         <canvas id="fgm-parallel-twin" width="250" height="250">Consider updating your browser.</canvas>
         <canvas id="fgm-serial-twin" width="250" height="250">Consider updating your browser.</canvas>
       </div>
-      <button onclick="smart2.run();dumb2.run();" class="actionbutton">Run</button><p>a cena corre mais rapido porque mudaste o algoritmo, e n porque andaste a ler manuais de documentacao a descobrir como fazer finetunning de uma ma ideia a partida
-If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.</p>
+      <button onclick="smart2.run();dumb2.run();" class="actionbutton">Run</button><p>If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.</p>
 
       <div id="disqus_thread">    
         <script type="text/javascript">
