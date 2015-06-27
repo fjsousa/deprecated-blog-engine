@@ -65,7 +65,7 @@
 
       <div class="fgm-wrapper">
         <canvas id="fgm-serial" width="400" height="400">Consider updating your browser.</canvas>
-        <button onclick="dumb.run()" class="actionbutton">Run</button>
+        <button onclick="dumb.run()" class="actionbutton">&#9658;</button>
       </div><p>If you press <strong>Run</strong>, you&#39;ll see an animation of the fire propagation with the naive version of the CA. Notice that each square represents a portion of the terrain 
 and the colour is just a linear scale that maps to ignition time. The scale goes from blue, to red, white is the starting point and black means the cell is unburned.</p>
 <p>This is the JavaScript code that runs the spatial loop. If you inspect this page, you&#39;ll see a very similar code:</p>
@@ -158,7 +158,7 @@ compute the inner cell ignition time from each neighbour.</p>
 
       <div class="fgm-wrapper">
         <canvas id="fgm-parallel" width="400" height="400">Consider updating your browser.</canvas>
-        <button onclick="smart.run()" class="actionbutton">Run</button>
+        <button onclick="smart.run()" class="actionbutton">&#9658;</button>
       </div><p>This is how the spatial loop looks like:</p>
 <pre><code class="lang-Javascript">
 function smartSpatialLoop(){
@@ -208,7 +208,7 @@ function smartSpatialLoop(){
         <canvas id="fgm-parallel-twin" width="250" height="250">Consider updating your browser.</canvas>
         <canvas id="fgm-serial-twin" width="250" height="250">Consider updating your browser.</canvas>
       </div>
-      <button onclick="smart2.run();dumb2.run();" class="actionbutton">Run</button><p>If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.</p>
+      <button onclick="smart2.run();dumb2.run();" class="actionbutton">&#9658;</button><p>If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.</p>
 
       <div id="disqus_thread">    
         <script type="text/javascript">

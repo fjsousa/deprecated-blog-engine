@@ -155,15 +155,16 @@ body {
   display: block;
   margin-left: auto;
   margin-right: auto;
-  height: 30px;
+  height: 35px;
   width: 60px;
   margin-top: 20px; 
-  border-width: 0px; 
-  border-radius: 0px;
+  border-width: 0px 1px 1px 0px; 
+  border-radius: 2px;
   font-family: "freight-text-pro", Georgia, Cambria, "Times New Roman", Times, serif;  
-  font-size: 18px; 
+  font-size: 23px; 
   text-align: center; 
-  background-color: #aaa; 
+  background-color: #aaa;
+  border-color: rgba(200,200,200,0.8); 
   color: #FFFFFF; 
 }
 
