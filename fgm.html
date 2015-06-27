@@ -49,19 +49,19 @@
   <div id="container">
     <div id="content"><h1 id="forest-fires-and-parallel-cellular-automata-going-from-8x-to-240x-faster-with-gpus">Forest Fires and Parallel Cellular Automata, going from 8x to 240x faster with GPUs</h1>
 <p>Forest fire numerical models use Cellular Automata (CA) to simulate fire propagation. A grid or mesh of the terrain is provided, along with maps for parameters like fuel properties, wind speed, humidity and others. The CA is basically a way to propagate an ignition state, based on minimum travel times, between adjacent cells. </p>
-<p>Other methods exist, like vector based methods that compute the position of the fire front in consecutive time steps, or partial differences equation (PDE), that allow for a two way coupling of the fire model and the weather models.</p>
+<p>Other methods exist, like vector based methods, that compute the position of the fire front in consecutive time steps, or partial differences equation (PDE), that allow for a two way coupling of the fire model and the weather models.</p>
 <p>Although the last type is much more accurate, the first two are the <em>de facto</em> tools for fire modeling due to the compromise between computing speed and accuracy.</p>
 <p>In this blog post, I&#39;ll show you two versions of a CA model, a trivial and a parallel version I developed during my Masters. Both versions were ported to<a href="https://en.wikipedia.org/wiki/CUDA">Nvidia GPUs</a> with the aim of speeding up the existing single core implementation. </p>
 <p>Initially, a direct, naive port was attempted which wasn&#39;t very performant. This lead me to reformulate the algorithm so that it was fully parallel and therefore, more suitable to the many-core architecture of the GPU.</p>
 <p>Performance increase was only achieved with a rethinking of the algorithm, not by tweaking and fine tunning the GPU parameters of a flawed approach.</p>
 <h2 id="naive-algorithm">Naive algorithm</h2>
 <p>The existing algorithm was the following:</p>
-<p>-An outer loop iterates over time and an inner loop iterates in space, over the rows and columns of the forest numerical terrain.</p>
+<p>-An outer loop iterates over time and an inner loop iterates in space, over the rows and columns of the terrain grid.</p>
 <p>-The inner loop looks for active cells in a map of ignition times and propagates the fire outwards, to each one of the 8 neighbours.</p>
 <p><img src="assets/img/fgm/outer.png" alt="Outer propagation" title="Outer Propagation"></p>
 <p>-The ignition time of each neighbour is computed with the formula below. The ignition map is then updated:</p>
 
-      <div class="equation">$$ t + \frac{l}{ROS}$$</div><p>where <em>ROS</em> is the <strong>R</strong>ate <strong>O</strong>f <strong>S</strong>pread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc.</p>
+      <div class="equation">$$ t + \frac{l}{ROS}$$</div><p>where <em>ROS</em> is the <strong>R</strong>ate <strong>O</strong>f <strong>S</strong>pread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc; <em>l</em> is the distance between cells and <em>t</em> is the time in the central cell.</p>
 
       <div class="fgm-wrapper">
         <canvas id="fgm-serial" width="400" height="400">Consider updating your browser.</canvas>
@@ -70,7 +70,7 @@
 and the colour is just a linear scale that maps to ignition time. The scale goes from blue, to red, white is the starting point and black means the cell is unburned.</p>
 <p>This is the JavaScript code that runs the spatial loop. If you inspect this page, you&#39;ll see a very similar code:</p>
 <pre><code class="lang-Javascript">
-function dumbSpatialLoop(){
+function naiveSpatialLoop(){
 
   t = tn;
   tn = Infinity;
@@ -151,7 +151,7 @@ are actually propagating and thus, require computation. Here&#39;s the speedups 
 <p>During the process, the ignition time in each cell is continuously updated, so that if two cells propagate to the same cell, the minimum time of the two is considered and stored as the true ignition time.</p>
 <p>Looking at the problem in another way, what we have is a condition that can be stated as follows: the ignition time of each cell, is always the minimum of the set of ignition times accounted from the 8 surrounding cells.</p>
 <p>From this, instead of computing outward ignition times at each neighbour, I 
-compute the inner cell ignition time from each neighbour.</p>
+compute the ignition time at the inner cell.</p>
 <p><img src="assets/img/fgm/inner.png" alt="Outer propagation" title="Outer Propagation"></p>
 <p>But now the question is, how can I compute ignition times from cells that haven&#39;t burned yet? </p>
 <p>The solution is to do it iteratively, ie, to start from a random ignition map and compute each new map function of the previous one, until there is virtually no difference between any two consecutive ignition maps. </p>
@@ -200,7 +200,7 @@ function smartSpatialLoop(){
 
 }
 </code></pre>
-<p>The algorithm is much more efficient because I no longer spend most of the time looking for empty cells. Also, because of the it&#39;s parallelism, I there&#39;s no race condition and consequent serialization. The performance gains are around two orders of magnitude.</p>
+<p>The algorithm is much more efficient because I no longer spend most of the time looking for empty cells. Also, because of its parallelism, there&#39;s no longer race conditions and consequent serialization. The performance gains are around two orders of magnitude.</p>
 <p><img src="assets/img/fgm/smart.png" alt="Outer propagation" title="Outer Propagation"></p>
 <p>The two models side by side, with the same iteration interval of 100ms. Notice that the conditions are random, so each time you refresh the page, you&#39;ll get a slightly different simulation: </p>
 
@@ -208,7 +208,7 @@ function smartSpatialLoop(){
         <canvas id="fgm-parallel-twin" width="250" height="250">Consider updating your browser.</canvas>
         <canvas id="fgm-serial-twin" width="250" height="250">Consider updating your browser.</canvas>
       </div>
-      <button onclick="smart2.run();dumb2.run();" class="actionbutton">&#9658;</button><p>If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.</p>
+      <button onclick="smart2.run();dumb2.run();" class="actionbutton">&#9658;</button><p>And that&#39;s it. If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.</p>
 
       <div id="disqus_thread">    
         <script type="text/javascript">

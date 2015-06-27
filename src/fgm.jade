@@ -5,7 +5,7 @@ include ./includes/post-layout
 
     Forest fire numerical models use Cellular Automata (CA) to simulate fire propagation. A grid or mesh of the terrain is provided, along with maps for parameters like fuel properties, wind speed, humidity and others. The CA is basically a way to propagate an ignition state, based on minimum travel times, between adjacent cells. 
 
-    Other methods exist, like vector based methods that compute the position of the fire front in consecutive time steps, or partial differences equation (PDE), that allow for a two way coupling of the fire model and the weather models.
+    Other methods exist, like vector based methods, that compute the position of the fire front in consecutive time steps, or partial differences equation (PDE), that allow for a two way coupling of the fire model and the weather models.
 
     Although the last type is much more accurate, the first two are the *de facto* tools for fire modeling due to the compromise between computing speed and accuracy.
 
@@ -20,7 +20,7 @@ include ./includes/post-layout
 
     The existing algorithm was the following:
 
-    -An outer loop iterates over time and an inner loop iterates in space, over the rows and columns of the forest numerical terrain.
+    -An outer loop iterates over time and an inner loop iterates in space, over the rows and columns of the terrain grid.
 
     -The inner loop looks for active cells in a map of ignition times and propagates the fire outwards, to each one of the 8 neighbours.
 
@@ -31,7 +31,7 @@ include ./includes/post-layout
   .equation $$ t + \frac{l}{ROS}$$
 
   :markdown
-    where *ROS* is the **R**ate **O**f **S**pread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc.
+    where *ROS* is the **R**ate **O**f **S**pread, basically the flame speed in the neighbour direction, function of wind, moisture, terrain, etc; *l* is the distance between cells and *t* is the time in the central cell.
 
   .fgm-wrapper
     canvas#fgm-serial(width='400', height='400')
@@ -48,7 +48,7 @@ include ./includes/post-layout
 
     ```Javascript
 
-    function dumbSpatialLoop(){
+    function naiveSpatialLoop(){
 
       t = tn;
       tn = Infinity;
@@ -143,7 +143,7 @@ include ./includes/post-layout
     Looking at the problem in another way, what we have is a condition that can be stated as follows: the ignition time of each cell, is always the minimum of the set of ignition times accounted from the 8 surrounding cells.
 
     From this, instead of computing outward ignition times at each neighbour, I 
-    compute the inner cell ignition time from each neighbour.
+    compute the ignition time at the inner cell.
 
     ![Outer propagation](assets/img/fgm/inner.png "Outer Propagation")
 
@@ -203,7 +203,7 @@ include ./includes/post-layout
 
     ```
 
-    The algorithm is much more efficient because I no longer spend most of the time looking for empty cells. Also, because of the it's parallelism, I there's no race condition and consequent serialization. The performance gains are around two orders of magnitude.
+    The algorithm is much more efficient because I no longer spend most of the time looking for empty cells. Also, because of its parallelism, there's no longer race conditions and consequent serialization. The performance gains are around two orders of magnitude.
 
     ![Outer propagation](assets/img/fgm/smart.png "Outer Propagation")
 
@@ -218,7 +218,7 @@ include ./includes/post-layout
   button.actionbutton(onclick='smart2.run();dumb2.run();') &#9658;
 
   :markdown
-    If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.
+    And that's it. If you want to know more just follow the link and read the<a href="https://github.com/fjsousa/fjsousa.github.io/blob/master/assets/docs/sousa-etall.pdf" target="_blank">white paper</a>.
 
 //- rags
 script(type='text/javascript', src='assets/src/rags.js')
