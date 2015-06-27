@@ -3,9 +3,13 @@ include ./includes/post-layout
   :markdown
     #Forest Fires and Parallel Cellular Automata, going from 8x to 240x faster with GPUs
 
-    Forest fire numerical models use Cellular Automata (CA) to simulate fire propagation. In this blog post, I'll show you two versions of a CA model, a trivial and a parallel version I developed during my Masters.
+    Forest fire numerical models use Cellular Automata (CA) to simulate fire propagation. A grid or mesh of the terrain is provided, along with maps for parameters like fuel properties, wind speed, humidity and others. The CA is basically a way to propagate an ignition state, based on minimum travel times, between adjacent cells. 
 
-    Both versions were ported to[Nvidia GPUs](https://en.wikipedia.org/wiki/CUDA) with the aim of speeding up the existing single core implementation. 
+    Other methods exist, like vector based methods that compute the position of the fire front in consecutive time steps, or partial differences equation (PDE), that allow for a two way coupling of the fire model and the weather models.
+
+    Although the last type is much more accurate, the first two are the *de facto* tools for fire modeling due to the compromise between computing speed and accuracy.
+
+    In this blog post, I'll show you two versions of a CA model, a trivial and a parallel version I developed during my Masters. Both versions were ported to[Nvidia GPUs](https://en.wikipedia.org/wiki/CUDA) with the aim of speeding up the existing single core implementation. 
 
     Initially, a direct, naive port was attempted which wasn't very performant. This lead me to reformulate the algorithm so that it was fully parallel and therefore, more suitable to the many-core architecture of the GPU.
 
